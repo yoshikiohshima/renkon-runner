@@ -1,0 +1,88 @@
+{"padTitle":"transcription",
+"positions":{"map":{"__map":true,
+"values":[["2",{"height":384.50387798616714,
+"id":"2",
+"type":"resize",
+"width":668.28288166517,
+"x":102.836721060088,
+"y":130.8729095537521}],["3",{"height":410.3660757699035,
+"id":"3",
+"type":"move",
+"width":996.0101250674206,
+"x":105.2048371503847,
+"y":584.2983338816738}],["4",{"height":206.5890103567782,
+"id":"4",
+"type":"move",
+"width":807.288531248111,
+"x":835.1453587028294,
+"y":144.929792878594}]]}},
+"titles":{"map":{"__map":true,
+"values":[["2",{"id":"2",
+"state":false,
+"title":"Parameters"}],["3",{"id":"3",
+"state":false,
+"title":"untitled"}],["4",{"id":"4",
+"state":false,
+"title":"untitled"}]]}},
+"version":2,
+"windowEnabled":{"map":{"__map":true,
+"values":[["2",{"enabled":true,
+"id":"2"}],["3",{"enabled":true,
+"id":"3"}],["4",{"enabled":true,
+"id":"4"}]]}},
+"windowTypes":{"map":{"__map":true,
+"values":[["2","code"],["3","code"],["4","code"]]}},
+"windows":["2","3","4"],
+"zIndex":{"map":{"__map":true,
+"values":[["2",101],["3",103],["4",102]]}}}
+{__codeMap: true, value: [[`2`, `/*
+const hostName = (() => {
+    const maybeHost = new URL(window.top.location).searchParams.get("host");
+    return maybeHost || "/"
+})();
+*/
+
+const hostName ="https://substrate-3533.local";
+
+const baseURL = Behaviors.collect(
+  \`\${hostName}/events;data=substrate-bootstrap-dev18\`,
+  Events.change(newSpaceURL), (_old, url) => {
+    return \`\${hostName}/events;data=\${url}\`;
+  }
+);
+const streamURL = \`\${baseURL}/stream/events\`;
+const writeRecordsURL = \`\${baseURL}/\`
+
+const transcriptionQuery = {compare: {type: [{compare: "=", value: "transcription"}]}};
+
+const newSpaceURL = undefined;
+`],
+[`3`, `const transcrptionQueryUrl = constructQueryUrl(streamURL, transcriptionQuery);
+
+const constructQueryUrl = (streamURL, recordQuery) => {
+  const url = new URL(streamURL);
+  url.searchParams.set("queryjson", JSON.stringify(recordQuery));
+  return url.toString();
+}
+
+const recordHandler = (evt) => {
+  console.log(evt);
+  const readRecordDataURL = id => \`\${baseURL}/events/\${id}/data\`;
+  let records = [];  
+  const data = JSON.parse(evt.data);
+  return {
+    records: data.updates.records.events.map(record => record.data_sha256 ? {...record, data_url: readRecordDataURL(record.id)} : record),
+    incremental: data.incremental,
+    until: data.until,
+    max: data.max,
+  }
+};
+`],
+[`4`, `const transcriptionSource = Behaviors.collect(null, Events.change(transcrptionQueryUrl), (old, queryUrl) => {
+    old?.close();
+    return new Renkon.app.EventSource(queryUrl);
+});
+
+const transcriptionEvents = Events.listener(transcriptionSource, "message", recordHandler, {queued: true});
+
+console.log(transcriptionEvents);`]]}
