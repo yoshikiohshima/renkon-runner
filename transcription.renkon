@@ -1,21 +1,21 @@
 {"padTitle":"transcription",
 "positions":{"map":{"__map":true,
-"values":[["2",{"height":384.50387798616714,
+"values":[["2",{"height":387.1905099306116,
 "id":"2",
 "type":"resize",
-"width":668.28288166517,
+"width":678.8905205540589,
 "x":102.836721060088,
 "y":130.8729095537521}],["3",{"height":410.3660757699035,
 "id":"3",
 "type":"move",
 "width":996.0101250674206,
 "x":105.2048371503847,
-"y":584.2983338816738}],["4",{"height":206.5890103567782,
+"y":584.2983338816738}],["4",{"height":355.4017705516271,
 "id":"4",
-"type":"move",
-"width":807.288531248111,
-"x":835.1453587028294,
-"y":144.929792878594}]]}},
+"type":"resize",
+"width":807.9056555068472,
+"x":896.4691434250516,
+"y":19.75618176748287}]]}},
 "titles":{"map":{"__map":true,
 "values":[["2",{"id":"2",
 "state":false,
@@ -66,7 +66,6 @@ const constructQueryUrl = (streamURL, recordQuery) => {
 }
 
 const recordHandler = (evt) => {
-  console.log(evt);
   const readRecordDataURL = id => \`\${baseURL}/events/\${id}/data\`;
   let records = [];  
   const data = JSON.parse(evt.data);
@@ -85,4 +84,15 @@ const recordHandler = (evt) => {
 
 const transcriptionEvents = Events.listener(transcriptionSource, "message", recordHandler, {queued: true});
 
-console.log(transcriptionEvents);`]]}
+const segs = transcriptionEvents[0].records.map(r => r.fields?.transcribed?.data?.segments).filter(s => s);
+
+const segments = ((segs) => {
+  const filtered = segs.filter(s => s.length > 0).map(s => s[0].text);
+  return filtered.length > 0 ? filtered : undefined;
+})(segs);
+
+const write = ((url, records) => {
+  const writer = new Renkon.app.RecordsWriter();
+  return writer.writeRecords(url, [{fields: {testSegments: segments}}]);
+})(baseURL, segments);
+`]]}

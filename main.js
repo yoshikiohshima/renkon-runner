@@ -32,8 +32,26 @@ class EventSource {
     }
 }
 
+class RecordsWriter {
+    writeRecords(url, records) {
+        if (!url.endsWith("/")) {
+            url = url + "/";
+        }
+        console.log("write", url, records);
+        return fetch(url, {
+            method: 'POST', body: JSON.stringify({
+                command: "events:write",
+                parameters: {
+                    "events": records,
+                }
+            })
+        });
+    }
+}
+
 const bindings = {
-    EventSource
+    EventSource,
+    RecordsWriter
 };
 
 const programState = new ProgramState(Date.now(), bindings);
