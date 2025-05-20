@@ -1,9 +1,9 @@
 {"padTitle":"Server-Side-Renkon",
 "positions":{"map":{"__map":true,
-"values":[["3",{"height":6971.732230358902,
+"values":[["3",{"height":7060.770761893245,
 "id":"3",
 "type":"resize",
-"width":976.2962981245943,
+"width":1004.0933096477719,
 "x":1340.4681791330486,
 "y":263.3837537230511}],["4",{"height":2112.3450437672373,
 "id":"4",
@@ -248,7 +248,7 @@
         document.querySelector("#showGraph").textContent = str;
     })(showGraph);
 
-    const _onUpload = ((runRequest, serverURL, windowContents, windowEnabled) => {
+    const _onUpload = ((runRequest, serverURL, windowContents, padTitle, windowEnabled) => {
         const id = runRequest.id;
         const iframe = windowContents.map.get(id);
         const code = [...windowContents.map]
@@ -259,9 +259,9 @@
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({code: code})
+          body: JSON.stringify({code: code, name: padTitle})
         });
-})(upload, serverURL, windowContents, windowEnabled);
+})(upload, serverURL, windowContents, padTitle, windowEnabled);
 
     const _onInspect = ((inspectRequest) => {
         const id = inspectRequest.id;
