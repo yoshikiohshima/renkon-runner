@@ -37,7 +37,6 @@ class RecordsWriter {
         if (!url.endsWith("/")) {
             url = url + "/";
         }
-        console.log("write", url, records);
         return fetch(url, {
             method: 'POST', body: JSON.stringify({
                 command: "events:write",
