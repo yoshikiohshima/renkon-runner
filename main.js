@@ -55,7 +55,8 @@ app.post("/upload", async (req, res) => {
 
 app.get("/list", async (req, res) => {
     console.log(JSON.stringify([...processes.keys()]));
-    res.json({names: [...processes.keys()]});
+    // res.json({names: [...processes.keys()]});
+    res.json({names: ["banana", "orange", "apple"]});
 });
 
 // process.on("exit", () => console.log("I am exiting"));

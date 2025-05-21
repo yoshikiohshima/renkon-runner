@@ -1,0 +1,23 @@
+{"padTitle":"orange",
+"positions":{"map":{"__map":true,
+"values":[["1",{"height":85.63802083333334,
+"id":"1",
+"type":"resize",
+"width":413.6328125,
+"x":45,
+"y":50}]]}},
+"titles":{"map":{"__map":true,
+"values":[["1",{"id":"1",
+"state":false,
+"title":"untitled"}]]}},
+"version":2,
+"windowEnabled":{"map":{"__map":true,
+"values":[["1",{"enabled":true,
+"id":"1"}]]}},
+"windowTypes":{"map":{"__map":true,
+"values":[["1","code"]]}},
+"windows":["1"],
+"zIndex":{"map":{"__map":true,
+"values":[["1",100]]}}}
+{__codeMap: true, value: [[`1`, `console.log(a);
+const a = (() => "orange")(Events.timer(1000))`]]}

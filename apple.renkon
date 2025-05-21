@@ -1,0 +1,23 @@
+{"padTitle":"apple",
+"positions":{"map":{"__map":true,
+"values":[["1",{"height":92.09635416666666,
+"id":"1",
+"type":"resize",
+"width":458.35503472222223,
+"x":45,
+"y":50}]]}},
+"titles":{"map":{"__map":true,
+"values":[["1",{"id":"1",
+"state":false,
+"title":"untitled"}]]}},
+"version":2,
+"windowEnabled":{"map":{"__map":true,
+"values":[["1",{"enabled":true,
+"id":"1"}]]}},
+"windowTypes":{"map":{"__map":true,
+"values":[["1","code"]]}},
+"windows":["1"],
+"zIndex":{"map":{"__map":true,
+"values":[["1",100]]}}}
+{__codeMap: true, value: [[`1`, `console.log(a);
+const a = (() => "apple")(Events.timer(1000))`]]}
