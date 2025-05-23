@@ -37,8 +37,8 @@ function send(process, code) {
     process.stdin.write(JSON.stringify(code), "utf-8");
     process.stdin.uncork();
 }
-   
-app.post("/upload", async (req, res) => {
+
+app.post("/run", async (req, res) => {
     const code = req.body.code;
     const name = req.body.name || "main";
 
@@ -53,10 +53,21 @@ app.post("/upload", async (req, res) => {
     return res.status(200).end(JSON.stringify({message: "code received"}));
 });
 
+app.post("/stop", async (req, res) => {
+    const name = req.body.name || "main";
+    console.log("stop", name);
+    const process = processes.get(name);
+    if (process) {
+        process.kill("SIGTERM");
+    }
+    processes.delete(name);
+    res.json("done");
+});
+
 app.get("/list", async (req, res) => {
     console.log(JSON.stringify([...processes.keys()]));
-    // res.json({names: [...processes.keys()]});
-    res.json({names: ["banana", "orange", "apple"]});
+    res.json({names: [...processes.keys()]});
+    // res.json({names: ["banana", "orange", "apple"]});
 });
 
 // process.on("exit", () => console.log("I am exiting"));

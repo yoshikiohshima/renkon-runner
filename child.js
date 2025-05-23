@@ -54,5 +54,3 @@ process.stdin.on("data", (chunk) => {
     programState.setupProgram(array);
     programState.nodeEvaluator();
 });
-
-console.log("child");

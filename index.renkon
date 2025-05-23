@@ -1,31 +1,36 @@
 {"padTitle":"Server-Side-Renkon",
 "positions":{"map":{"__map":true,
-"values":[["6",{"height":2586.9583136586007,
+"values":[["6",{"height":3182.435646932122,
 "id":"6",
 "type":"resize",
-"width":1373.5999282655969,
+"width":1322.0738844803989,
 "x":-99.3602965940236,
-"y":-261.0542546571053}],["11",{"height":1075.3995611047555,
+"y":-261.0542546571053}],["11",{"height":596.7830539500513,
 "id":"11",
-"type":"resize",
-"width":821.5810873086926,
-"x":-1076.9890036141771,
-"y":-260.8404648364692}],["12",{"height":1715.6041161405815,
+"type":"move",
+"width":617.0552724252162,
+"x":-80.18909181201093,
+"y":-914.9941746340685}],["12",{"height":1732.8831767708493,
 "id":"12",
 "type":"move",
-"width":850.114076996712,
-"x":-1089.8589141419989,
-"y":1576.2956571268514}],["33",{"height":2732.8228234287444,
+"width":854.1451621960841,
+"x":1163.1832287090183,
+"y":-264.3996035759288}],["33",{"height":2911.2247363153574,
 "id":"33",
 "type":"resize",
-"width":1059.7658297284997,
-"x":-2215.4455764673544,
-"y":-265.92500093615115}],["38",{"height":568.0726807128361,
+"width":926.8266696019825,
+"x":-2514.431904284744,
+"y":-1114.6597745947263}],["38",{"height":1231.0838647162432,
 "id":"38",
 "type":"resize",
-"width":846.4080202231688,
-"x":-1087.6336226046026,
-"y":924.4501528664034}]]}},
+"width":805.0904433243433,
+"x":-1470.94834825057,
+"y":-1118.8888022134117}],["40",{"height":1565.6935232198896,
+"id":"40",
+"type":"resize",
+"width":840.5951196412351,
+"x":-1478.5242260169218,
+"y":182.14143220565586}]]}},
 "titles":{"map":{"__map":true,
 "values":[["6",{"id":"6",
 "state":false,
@@ -37,7 +42,9 @@
 "state":false,
 "title":"iframes"}],["38",{"id":"38",
 "state":false,
-"title":"Data"}]]}},
+"title":"Data"}],["40",{"id":"40",
+"state":false,
+"title":"Program List"}]]}},
 "version":2,
 "windowEnabled":{"map":{"__map":true,
 "values":[["6",{"enabled":true,
@@ -45,12 +52,13 @@
 "id":"11"}],["12",{"enabled":true,
 "id":"12"}],["33",{"enabled":true,
 "id":"33"}],["38",{"enabled":true,
-"id":"38"}]]}},
+"id":"38"}],["40",{"enabled":true,
+"id":"40"}]]}},
 "windowTypes":{"map":{"__map":true,
-"values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"]]}},
-"windows":["6","11","12","33","38"],
+"values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"]]}},
+"windows":["6","11","12","33","38","40"],
 "zIndex":{"map":{"__map":true,
-"values":[["6",109],["11",111],["12",120],["33",118],["38",116]]}}}
+"values":[["6",109],["11",121],["12",111],["33",122],["38",120],["40",118]]}}}
 {__codeMap: true, value: [[`6`, `    const css = \`
 @font-face {
     font-family: "OpenSans-Regular";
@@ -102,7 +110,16 @@ html, body {
     position: absolute;
     z-index: 200000;
 }
+#sidebarTop {
+  margin-bottom: 16px;
+}
+.thumbnail {
+    display: flex;
+}
 
+.thumbLabel {
+    flex-grow: 1;
+}
 #padTitle {
     margin-left: 24px;
 }
@@ -132,36 +149,30 @@ html, body {
     user-select: none;
 }
 
-
-.closeButton {
-    background-image: url("data:image/svg+xml,%3Csvg%20id%3D%22Layer_1%22%20data-name%3D%22Layer%201%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20d%3D%22M8.48%2C12.25C6.4%2C10.17%2C4.37%2C8.16%2C2.35%2C6.15c-.34-.34-.68-.69-1-1.05a2.34%2C2.34%2C0%2C0%2C1%2C.17-3.26%2C2.3%2C2.3%2C0%2C0%2C1%2C3.25-.09C7%2C3.93%2C9.23%2C6.14%2C11.45%2C8.34a5.83%2C5.83%2C0%2C0%2C1%2C.43.58c.36-.4.62-.71.9-1%2C2-2%2C4.12-4%2C6.12-6.08a2.51%2C2.51%2C0%2C0%2C1%2C3.41%2C0%2C2.37%2C2.37%2C0%2C0%2C1%2C0%2C3.43c-2.18%2C2.22-4.39%2C4.41-6.58%2C6.62-.11.1-.21.22-.34.35l.44.48L22.09%2C19A2.7%2C2.7%2C0%2C0%2C1%2C23%2C20.56a2.49%2C2.49%2C0%2C0%2C1-1.29%2C2.54A2.36%2C2.36%2C0%2C0%2C1%2C19%2C22.69c-2-2-4-4-6.06-6-.33-.33-.62-.68-1-1.12-1.63%2C1.66-3.17%2C3.25-4.73%2C4.82-.79.8-1.6%2C1.59-2.42%2C2.36a2.32%2C2.32%2C0%2C0%2C1-3.21-.1%2C2.3%2C2.3%2C0%2C0%2C1-.19-3.25c2.14-2.2%2C4.31-4.36%2C6.48-6.54Z%22%20fill%3D%22%234D4D4D%22%2F%3E%3C%2Fsvg%3E");
-}
-
-.runButton {
-    background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C!--%20Box%20outline%20--%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%2F%3E%3C!--%20Right-pointing%20triangle%20(play%20icon)%20--%3E%3Cpath%20d%3D%22M9%207L17%2012L9%2017Z%22%20fill%3D%22%234D4D4D%22%20stroke%3D%22none%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-    display: none;
-    pointer-events: none;
-}
-
-.runButton[type="runner"] {
-    display: inherit;
-    pointer-events: all;
-}
-
-.enabledButton {
-    background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C!--%20Box%20outline%20--%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%20stroke-width%3D%222%22%2F%3E%3C!--%20Thicker%20checkmark%20--%3E%3Cpath%20d%3D%22M5.5%2012.5L10.5%2017.5L18.5%207.5%22%20stroke-width%3D%223%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-}
-
-.enabledButton[disabled="true"] {
-    background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E");
+.sidebarButton {
+    width: 24px;
+    height: 24px;
+    margin: 4px;
+    background-position: center;
+    border: 0px;
+    border-radius: 4px;
+    background-size: 24px 24px;
 }
 
 .plusButton {
-    width: 24px;
-    height: 24px;
-    background-position: center;
-    background-size: 18px 18px;
     background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%3E%3Cline%20x1%3D%2212%22%20y1%3D%225%22%20x2%3D%2212%22%20y2%3D%2219%22%2F%3E%3Cline%20x1%3D%225%22%20y1%3D%2212%22%20x2%3D%2219%22%20y2%3D%2212%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+.trashButton {
+    background-image: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%3E%3C!--%20Generator%3A%20Sketch%2064%20(93537)%20-%20https%3A%2F%2Fsketch.com%20--%3E%3Ctitle%3Eicon%2Fmaterial%2Ftrash-can%3C%2Ftitle%3E%3Cdesc%3ECreated%20with%20Sketch.%3C%2Fdesc%3E%3Cg%20id%3D%22icon%2Fmaterial%2Ftrash-can%22%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20id%3D%22mdi-trash-can%22%3E%3Cg%20id%3D%22Icon%22%20fill%3D%22%234D4D4D%22%3E%3Cpath%20d%3D%22M9%2C3%20L9%2C4%20L4%2C4%20L4%2C6%20L5%2C6%20L5%2C19%20C5%2C20.1045695%205.8954305%2C21%207%2C21%20L17%2C21%20C18.1045695%2C21%2019%2C20.1045695%2019%2C19%20L19%2C6%20L20%2C6%20L20%2C4%20L15%2C4%20L15%2C3%20L9%2C3%20M9%2C8%20L11%2C8%20L11%2C17%20L9%2C17%20L9%2C8%20M13%2C8%20L15%2C8%20L15%2C17%20L13%2C17%20L13%2C8%20Z%22%20id%3D%22Icon-Shape%22%3E%3C%2Fpath%3E%3C%2Fg%3E%3Crect%20id%3D%22ViewBox%22%20fill-rule%3D%22nonzero%22%20x%3D%220%22%20y%3D%220%22%20width%3D%2224%22%20height%3D%2224%22%3E%3C%2Frect%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+}
+
+.statusButton[status="go"] {
+    background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C!--%20Box%20outline%20--%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%2F%3E%3C%2Fg%3E%3C!--%20Green%20play%20triangle%20--%3E%3Cpolygon%20points%3D%229%2C7%2017%2C12%209%2C17%22%20fill%3D%22%2300AA00%22%2F%3E%3C%2Fsvg%3E");
+}
+
+.statusButton[status="stop"] {
+    background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C!--%20Box%20outline%20--%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%2F%3E%3C%2Fg%3E%3C!--%20Red%20stop%20square%20--%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%226%22%20height%3D%226%22%20fill%3D%22%23CC0000%22%2F%3E%3C%2Fsvg%3E");
 }
 \`;
 
@@ -198,39 +209,11 @@ const renkon = (() => {
     return renkon;
 })();
 
-/*
-const optionsJson = Behaviors.collect(["banana", "appple", "orange"],
-  updateButton, (_prev, _evt) => {
-    let realURL = serverURL;
-    if (realURL === "") {
-      return _prev;
-    }
-    if (!realURL.endsWith("/")) {
-      realURL = realURL + "/";
-    }
-  return fetch(realURL + "list").then((resp) => resp.json());    
-});
-*/
-
-const updateButton = Events.listener(renkon.querySelector("#updateButton"), "click", (evt) => evt);
-
-const renkonProgram = ((programs, selected) => {
-  let already = programs.map.get(selected.name);
-  if (already) {return already;}
-  const docName = selected.name + ".renkon";
-  console.log("loading: " + docName);
-  return fetch(docName).then((resp) => resp.text()).then((result) => {
-      return {name: selected.name, code: loadRenkon(result)};
-  }).catch((err) => {
-    console.error("docName could not be loaded");
-    return {name: selected.name};
-  });
-})(programs, selected);
-
-const loadedRenkonProgram = Events.receiver();
-
-Events.send(loadedRenkonProgram, Events.change(renkonProgram));
-
+const updateButton = Events.listener(
+  renkon.querySelector("#updateButton"),
+  "click",
+  (evt) => evt
+);
 `],
 [`12`, `const loadRenkon = (result) => {
     const index = result.indexOf("{__codeMap: true, value:");
@@ -325,39 +308,7 @@ function parseCodeMap(string) {
     return new Map(array.value);
 }
 `],
-[`33`, `const thumbnails = ((optionsJson) => {
-  const names = optionsJson.names;
-  const thumb = (name) => {
-    return h(
-      "div", {
-        "class": "thumbnail",
-        id: name,
-        onClick: (evt) => Events.send(selected, {name})
-      },
-      name);
-  };
-  const plusButton =  () => {
-    return h(
-      "button", {
-        "class": "menuButton plusButton",
-        id: "plus",
-        onClick: (evt) => plusHandler()
-      },
-      );
-  }
-  return h("div", {id: "thumbnails"}, [...names.map(thumb), plusButton()]);
-})(optionsJson);
-
-const plusHandler = () => {
-  const newName = "untitled" + (optionsJson.names.length + 1);
-  Events.send(selected, {name: newName});
-}
-
-render(thumbnails, renkon.querySelector("#thumbnailsHolder"));
-
-const selected = Events.receiver();
-
-const newRunner = (program) => {
+[`33`, `const newRunner = (program) => {
   const runnerIframe = document.createElement("iframe");
   runnerIframe.srcdoc = \`
 <!DOCTYPE html>
@@ -371,8 +322,10 @@ const newRunner = (program) => {
             window.CodeMirror = CodeMirror;
             window.newInspector = newInspector;
             const docName = "Server-Side-Child.renkon";
+            window._loaded = false;
 
             function loadRenkon(str) {
+                console.log("loadRenkon");
                 const index = str.indexOf("{__codeMap: true, value:");
                 let code;
                 let data1 = JSON.parse(str.slice(0, index));
@@ -389,7 +342,10 @@ const newRunner = (program) => {
                 if (programState.evaluatorRunning === 0) {
                     programState.evaluator();
                 }
-                window.parent.postMessage({ready: true, name: "\${program.name}"});
+                if (!window._loaded) {
+                    window._loaded = true;
+                    window.parent.postMessage({ready: true, name: "\${program.name}"});
+                }
             }
 
             fetch(docName).then((resp) => resp.text()).then((result) => {
@@ -414,6 +370,11 @@ const newRunner = (program) => {
                 if (typeof evt.data.serverURL === "string") {
                     window.programState.registerEvent("serverURL", evt.data.serverURL);
                 }
+                if (typeof evt.data.statusChange === "string") {
+                  console.log("statusChange", evt.data.statusChange);
+                    window.programState.registerEvent("statusChange", evt.data.statusChange);
+                }
+
             };
         </script>
     </head>
@@ -427,19 +388,39 @@ const newRunner = (program) => {
 const runners = Behaviors.collect(
   {map: new Map()},
   renkonProgram, (prev, selected) => {
+    if (selected === null) {return prev;}
     if (prev.map.get(selected.name)) {return prev}
+    console.log("runners updated", selected);
     prev.map.set(selected.name, newRunner(renkonProgram));
     return {map: prev.map};
   }
 )
 
-const updateRunner = ((runners, selected) => {
+const currentRunner = Behaviors.collect(
+  {prev: null, runner: null, name: ""},
+  renkonProgram, (prev, selected) => {
+    console.log("currentRunner", selected);
+    if (selected === null) {return {prev: prev.runner, runner: null, name: ""};}
+    const runner = runners.map.get(selected.name);
+    if (prev.runner === runner) {return prev;}
+    return {prev: prev.runner, runner: runner, name: selected.name}
+  }
+);
+
+const updateRunner = ((currentRunner, selected) => {
   console.log("updateRunner");
-  const runner = runners.map.get(selected.name);
-  if (!runner) {return;}
-  renkon.querySelector("#field").querySelector(".runnerIframe")?.remove();
-  renkon.querySelector("#field").appendChild(runner);
-})(runners, Behaviors.keep(selected));
+  const show = (dom) => dom.style.removeProperty("display");
+  const hide = (dom) => dom.style.setProperty("display", "none");
+  if (currentRunner.prev) {
+      hide(currentRunner.prev);
+  }
+  if (selected === null) {return;}
+  if (!currentRunner.runner) {return;}
+  if (![...renkon.querySelector("#field").childNodes].includes(currentRunner.runner)) {
+    renkon.querySelector("#field").appendChild(currentRunner.runner);
+  }
+  show(currentRunner.runner);
+})(currentRunner, renkonProgram);
 
 const readyHandler = Events.observe((notify) => {
   const listener = (evt) => {
@@ -464,6 +445,14 @@ const readyHandler = Events.observe((notify) => {
   sendAll(runners, {serverURL});
 })(serverURL, runners);
 
+((statusChange, runners) => {
+  const runner = runners.map.get(statusChange.name);
+  const oldStatus = statusChange.status === "go" ? "stop" : "go";
+  if (!runner) {return;}
+
+  send(runner, {statusChange: oldStatus});
+})(statusChange, runners);
+
 const sendAll = (runners, value) => {
   for (const [name, runner] of runners.map) {
     runner.contentWindow?.postMessage(value)
@@ -479,11 +468,18 @@ const send = (runner, value) => {
         notify(evt.target.value);
     };
     notify("http://localhost:2345");
+    // for now we just set it
+    renkon.querySelector("#serverURL").value = "http://localhost:2345";
     renkon.querySelector("#serverURL").addEventListener("input", change);
 }));
 
-const optionsJson = Behaviors.collect({names: ["banana", "apple", "orange"]},
-  updateButton, (_prev, _evt) => {
+const listUpdateRequest = Events.or(updateButton, readyHandler);
+
+console.log("listUpdateRequest", listUpdateRequest);
+
+const optionsJson = Behaviors.collect({names: []},
+  listUpdateRequest, (_prev, _evt) => {
+    console.log("updating options");
     let realURL = serverURL;
     if (realURL === "") {
       return _prev;
@@ -494,13 +490,125 @@ const optionsJson = Behaviors.collect({names: ["banana", "apple", "orange"]},
     return fetch(realURL + "list").then((resp) => resp.json());
 });
 
-const programs = Behaviors.collect(
+const programs = Behaviors.select(
   {map: new Map()},
-  loadedRenkonProgram, (prev, add) => {
-    if (prev.map.get(add.name)) {return prev;}
-    prev.map.set(add.name, add);
-    console.log("programs updated", add);
+  trash, (prev, trash) => {
+    if (!prev.map.has(trash)) {return prev}
+    prev.map.delete(trash);
     return {map: prev.map}
+  },
+  renkonProgramLoaded, (prev, program) => {
+    if (program === null) {return prev;}
+    if (prev.map.get(program.name)) {return prev;}
+    prev.map.set(program.name, program);
+    return {map: prev.map}
+  },
+);
+
+const programStates = Behaviors.select(
+  {map: new Map()}, // {name<string>, status: "go"|"stop"}
+  statusChange, (prev, statusChange) => {
+    prev.map.set(statusChange.name, statusChange);
+    return {map: prev.map};
   }
 );
+
+const renkonProgram = ((programs, selected) => {
+  if (selected === null) {return null;}
+  let already = programs.map.get(selected.name);
+  if (already) {return already;}
+  const docName = selected.name + ".renkon";
+  return fetch(docName).then((resp) => resp.text()).then((result) => {
+      return {name: selected.name, code: loadRenkon(result)};
+  }).catch((err) => {
+    console.log(\`\${docName} could not be loaded\`);
+    return {name: selected.name};
+  });
+})(programs, selectedProgram);
+
+const renkonProgramLoaded = Events.receiver();
+Events.send(renkonProgramLoaded, Events.change(renkonProgram));`],
+[`40`, `const selected = Events.receiver();
+
+const selectedProgram = Behaviors.select(
+  null,
+  trash, (_prev, trash) => null,
+  selected, (_prev, selected) => selected,
+);
+
+const thumbnails = ((programs, programStates) => {
+  const names = [...programs.map.keys()];
+  const thumb = (name) => {
+    return h(
+      "div", {
+        "class": "thumbnail",
+        id: name,
+        onClick: (evt) => Events.send(selected, {name})
+      },
+      [label(name), statusButton(name), trashButton(name)]);
+  };
+  
+  const label = (name) => {
+    return h("div", {
+      "class": "menuButton thumbLabel"
+    }, name)
+  };
+  const plusButton =  () => {
+    return h(
+      "button", {
+        "class": "sidebarButton plusButton",
+        id: "plus",
+        onClick: (evt) => plusHandler()
+      },
+    );
+  };
+
+  const trashButton = (name) => {
+    return h(
+      "button", {
+        "class": "sidebarButton trashButton",
+        id: \`trash-\${name}\`,
+        onClick: (evt) => Events.send(trash, name)
+      },
+    );
+  };
+
+  const statusButton = (name) => {
+    return h(
+      "button", {
+        "class": "sidebarButton statusButton",
+        id: \`status-\${name}\`,
+        status: (programStates.map.get(name)?.status|| "go"),
+        onClick: (evt) => {
+          const newStatus = programStates.map.get(name)?.status === "stop" ? "go" : "stop";
+          Events.send(statusChange, {name, status: newStatus});
+        }
+      },
+    );
+  };
+
+  return h("div", {id: "thumbnails"}, [...names.map(thumb), plusButton()]);
+})(programs, programStates);
+
+const plusHandler = () => {
+  const newName = "untitled" + (programs.map.size + 1);
+  Events.send(selected, {name: newName});
+}
+
+render(thumbnails, renkon.querySelector("#thumbnailsHolder"));
+
+const trash = Events.receiver();
+const statusChange = Events.receiver();
+
+/*
+const _stop = ((trash) => {
+  return fetch(serverURL + "/stop", {
+    method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({name: trash})
+    });
+})(trash);
+*/
 `]]}
