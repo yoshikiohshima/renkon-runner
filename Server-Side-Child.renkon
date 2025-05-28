@@ -45,12 +45,12 @@
 "type":"resize",
 "width":682.8100299256059,
 "x":321.30330790679744,
-"y":267.05204973782674}],["16",{"height":1111.8141055852245,
+"y":267.05204973782674}],["16",{"height":1353.583308642452,
 "id":"16",
-"type":"resize",
-"width":947.7672648777375,
-"x":-260.4019287965822,
-"y":2547.4424589234386}]]}},
+"type":"move",
+"width":797.0005145296376,
+"x":301.612816518757,
+"y":1779.7062944016675}]]}},
 "titles":{"map":{"__map":true,
 "values":[["3",{"id":"3",
 "state":false,
@@ -1599,8 +1599,6 @@ function parseCodeMap(string) {
   return new AbortController();
 });
 
-const abortHandler = Events.receiver();
-
 async function* consoleOutput(name, controller) {
   console.log("consoleOutput");
   if (!controller) {
@@ -1639,8 +1637,31 @@ async function* consoleOutput(name, controller) {
 };
 
 const output = consoleOutput(setupOutput, abortController);
+const logP = Events.next(output);
+const log = Events.change(logP);
+const logTimer = Events.timer(1000);
 
-const log = output.next();
+const logs = Events.select(
+  {acc: [], log: null},
+  log, (prev, log) => {
+    prev.acc.push(log.value);
+    return {acc: prev.acc, log: null};
+  },
+  logTimer, (prev, timer) => {
+    return {acc: [], log: prev.acc.join("\\n")}
+  }
+);
 
-console.log(log);
-`]]}
+((logs) => {
+  if (!logs.log) {return;}
+  window.Toastify({
+    text: logs.log,
+    duration: 750,
+    stopOnFocus: false,
+    gravity: "bottom", // \`top\` or \`bottom\`
+    position: "right", // \`left\`, \`center\` or \`right\`
+    style: {
+      background: "linear-gradient(to right, #00b09b, #96c93d)",
+    },
+  }).showToast();
+})(logs);`]]}

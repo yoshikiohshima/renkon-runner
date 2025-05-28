@@ -7,7 +7,8 @@ app.use(cors());
 
 const processes = new Map();
 
-const outputResponses = new Map(); // [name, [responses]]
+const outputResponses = new Map(); // [name, [respons]]
+// const outputRequests = new Map(); // [name, {request, response}]
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -37,12 +38,12 @@ function setOutput(name, child) {
     // child.stdout.pipe(process.stdout);
     child.stdout.on("data", (chunk) => {
         const result = chunk.toString();
-        console.log("result", result);
+        // console.log("result", result);
         const array = outputResponses.get(name);
         if (!array) {return;}
-        for (const res of array) {
-            console.log("sending", result);
-            res.write(result);
+        for (const entries of array) {
+            // console.log("sending", result);
+            entries.response.write(result);
         }
     });
 }
@@ -78,6 +79,13 @@ app.post("/stop", async (req, res) => {
         process.kill("SIGTERM");
     }
     processes.delete(name);
+    const array = outputResponses.get(name);
+    if (array) {
+        for (const entry of array) {
+            entry.response.end("closed");
+        }
+        outputResponses.delete(name);
+    }
     res.end("done");
 });
 
@@ -97,7 +105,15 @@ app.get("/stdout/:name", async (req, res) => {
         array = [];
         outputResponses.set(name, array);
     }
-    array.push(res);
+    array.push({request: req, response: res});
+
+    req.on("close", () => {
+        const entries = outputResponses.get(name);
+        if (!entries) {return;}
+        const newEntries = entries.filter(({request, responses}) => request !== req);
+        // console.log("close", entries.length, newEntries.length);
+        outputResponses.set(name, newEntries);
+    });
 });
 
 // process.on("exit", () => console.log("I am exiting"));
