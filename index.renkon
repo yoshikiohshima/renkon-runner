@@ -315,6 +315,8 @@ function parseCodeMap(string) {
 <html>
     <head>
         <meta charset="utf-8">
+        <link rel="stylesheet" type="text/css" href="./toastify.min.css">
+        <script type="text/javascript" src="./toastify.min.js"></script>
         <style>
         </style>
         <script type="module">
@@ -351,7 +353,7 @@ function parseCodeMap(string) {
             fetch(docName).then((resp) => resp.text()).then((result) => {
                 loadRenkon(result);
             }).catch((err) => {
-                console.error("docName could not be loaded");
+                console.error(err);
             });
 
             window.onmessage = (evt) => {

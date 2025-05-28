@@ -7,6 +7,8 @@ app.use(cors());
 
 const processes = new Map();
 
+const outputResponses = new Map(); // [name, [responses]]
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -26,9 +28,22 @@ function newProcess() {
 
     return new Promise((resolve) => {
         child.on("spawn", (_message) => {
-            child.stdout.pipe(process.stdout);
             resolve(child);
         });
+    });
+}
+
+function setOutput(name, child) {
+    // child.stdout.pipe(process.stdout);
+    child.stdout.on("data", (chunk) => {
+        const result = chunk.toString();
+        console.log("result", result);
+        const array = outputResponses.get(name);
+        if (!array) {return;}
+        for (const res of array) {
+            console.log("sending", result);
+            res.write(result);
+        }
     });
 }
 
@@ -47,6 +62,7 @@ app.post("/run", async (req, res) => {
         if (!process) {
             process = await newProcess();
             processes.set(name, process);
+            setOutput(name, process);
         }
         send(process, code);
     }
@@ -54,6 +70,7 @@ app.post("/run", async (req, res) => {
 });
 
 app.post("/stop", async (req, res) => {
+    if (!req.body.name) {res.end("no body");}
     const name = req.body.name || "main";
     console.log("stop", name);
     const process = processes.get(name);
@@ -61,13 +78,26 @@ app.post("/stop", async (req, res) => {
         process.kill("SIGTERM");
     }
     processes.delete(name);
-    res.json("done");
+    res.end("done");
 });
 
 app.get("/list", async (req, res) => {
     console.log(JSON.stringify([...processes.keys()]));
     res.json({names: [...processes.keys()]});
-    // res.json({names: ["banana", "orange", "apple"]});
+});
+
+app.get("/stdout/:name", async (req, res) => {
+    const name = req.params.name;
+    if (!name) {res.end("no name specified"); return;}
+    res.setHeader("Connection", "keep-alive");
+    res.writeHead(200);
+    res.write("start output");
+    let array = outputResponses.get(name);
+    if (!array) {
+        array = [];
+        outputResponses.set(name, array);
+    }
+    array.push(res);
 });
 
 // process.on("exit", () => console.log("I am exiting"));
@@ -81,5 +111,9 @@ process.on('SIGINT', () => {
 
 const port = process.env.PORT || 2345;
 
-app.listen(port, () => {
-    console.log(`⚡️[bootup]: Server is running at port: ${port}`)})
+const server = app.listen(port, () => {
+    console.log(`⚡️[bootup]: Server is running at port: ${port}`)});
+
+server.keepAliveTimeout = 60 * 1000;
+server.headersTimeout = 60 * 1000;
+

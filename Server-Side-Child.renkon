@@ -45,7 +45,12 @@
 "type":"resize",
 "width":682.8100299256059,
 "x":321.30330790679744,
-"y":267.05204973782674}]]}},
+"y":267.05204973782674}],["16",{"height":1111.8141055852245,
+"id":"16",
+"type":"resize",
+"width":947.7672648777375,
+"x":-260.4019287965822,
+"y":2547.4424589234386}]]}},
 "titles":{"map":{"__map":true,
 "values":[["3",{"id":"3",
 "state":false,
@@ -65,7 +70,9 @@
 "state":false,
 "title":"Stringify"}],["15",{"id":"15",
 "state":false,
-"title":"New Component"}]]}},
+"title":"New Component"}],["16",{"id":"16",
+"state":false,
+"title":"OutputConsole"}]]}},
 "version":2,
 "windowEnabled":{"map":{"__map":true,
 "values":[["3",{"enabled":true,
@@ -77,12 +84,13 @@
 "id":"9"}],["11",{"enabled":true,
 "id":"11"}],["12",{"enabled":true,
 "id":"12"}],["15",{"enabled":true,
-"id":"15"}]]}},
+"id":"15"}],["16",{"enabled":true,
+"id":"16"}]]}},
 "windowTypes":{"map":{"__map":true,
-"values":[["3","code"],["4","code"],["5","code"],["6","code"],["7","code"],["9","code"],["11","code"],["12","code"],["15","code"]]}},
-"windows":["3","4","5","6","7","9","11","12","15"],
+"values":[["3","code"],["4","code"],["5","code"],["6","code"],["7","code"],["9","code"],["11","code"],["12","code"],["15","code"],["16","code"]]}},
+"windows":["3","4","5","6","7","9","11","12","15","16"],
 "zIndex":{"map":{"__map":true,
-"values":[["3",105],["4",104],["5",103],["6",110],["7",112],["9",100],["11",113],["12",109],["15",111]]}}}
+"values":[["3",105],["4",104],["5",103],["6",110],["7",112],["9",100],["11",113],["12",109],["15",111],["16",114]]}}}
 {__codeMap: true, value: [[`3`, `    const addCode = Events.listener(renkon.querySelector("#addCodeButton"), "click", () => "code");
     const save = Events.listener(renkon.querySelector("#saveButton"), "click", (evt) => evt);
     const load = Events.listener(renkon.querySelector("#loadButton"), "click", (evt) => evt);
@@ -272,6 +280,20 @@
         });
       }
     })(statusChange, serverURL, windowContents, padTitle, windowEnabled);
+
+    const abortHandler = ((onStatusChange, padTitle) => {
+      if (onStatusChange.url.endsWith("stop")) {
+        return padTitle;        
+      }
+      return undefined;
+    })(Events.change(onStatusChange), padTitle);
+
+    const setupOutput = ((onStatusChange, padTitle) => {
+      if (onStatusChange.url.endsWith("run")) {
+        return padTitle;        
+      }
+      return undefined;
+    })(Events.change(onStatusChange), padTitle);
 
     const _onInspect = ((inspectRequest) => {
         const id = inspectRequest.id;
@@ -1571,4 +1593,54 @@ function parseCodeMap(string) {
         editor.dom.id = \`\${id}-editor\`;
         return editor;
     };
+`],
+[`16`, `const abortController = Behaviors.collect(new AbortController(), abortHandler, (a, b) => {
+  a.abort(); 
+  return new AbortController();
+});
+
+const abortHandler = Events.receiver();
+
+async function* consoleOutput(name, controller) {
+  console.log("consoleOutput");
+  if (!controller) {
+    controller = new AbortController();
+  }
+
+  const response = await fetch(\`\${serverURL}/stdout/\${name}\`, {
+    headers: {
+      'Connection': 'keep-alive',
+      'Content-Type': 'application/octet-stream',
+      'Accept': 'text/event-stream',
+    },
+    signal: controller.signal
+  });
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    let cont = true;
+    while (cont) {
+      const result = await reader.read();
+      if (result.done) {
+        break;
+      }
+      const text = decoder.decode(result.value);
+      yield text;
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error("llama error: ", e);
+    }
+    throw e;
+  } finally {
+    controller.abort();
+  }
+};
+
+const output = consoleOutput(setupOutput, abortController);
+
+const log = output.next();
+
+console.log(log);
 `]]}
