@@ -67,13 +67,13 @@ app.post("/run", async (req, res) => {
         }
         send(process, code);
     }
+    console.log("run", name);
     return res.status(200).end(JSON.stringify({message: "code received"}));
 });
 
 app.post("/stop", async (req, res) => {
     if (!req.body.name) {res.end("no body");}
     const name = req.body.name || "main";
-    console.log("stop", name);
     const process = processes.get(name);
     if (process) {
         process.kill("SIGTERM");
@@ -86,6 +86,7 @@ app.post("/stop", async (req, res) => {
         }
         outputResponses.delete(name);
     }
+    console.log("stop", name);
     res.end("done");
 });
 
