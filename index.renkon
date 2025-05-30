@@ -1,9 +1,9 @@
 {"padTitle":"Server-Side-Renkon",
 "positions":{"map":{"__map":true,
-"values":[["6",{"height":3182.435646932122,
+"values":[["6",{"height":2725.4630229388795,
 "id":"6",
 "type":"resize",
-"width":1322.0738844803989,
+"width":1244.1061060080397,
 "x":-99.3602965940236,
 "y":-261.0542546571053}],["11",{"height":596.7830539500513,
 "id":"11",
@@ -15,21 +15,21 @@
 "type":"move",
 "width":854.1451621960841,
 "x":1163.1832287090183,
-"y":-264.3996035759288}],["33",{"height":2911.2247363153574,
+"y":-264.3996035759288}],["33",{"height":3921.1251786319344,
 "id":"33",
-"type":"resize",
-"width":926.8266696019825,
-"x":-2514.431904284744,
-"y":-1114.6597745947263}],["38",{"height":1231.0838647162432,
+"type":"move",
+"width":1129.2046819197453,
+"x":-2894.6574353584424,
+"y":-1107.210738721981}],["38",{"height":1341.1349567550646,
 "id":"38",
 "type":"resize",
-"width":805.0904433243433,
-"x":-1470.94834825057,
-"y":-1118.8888022134117}],["40",{"height":1565.6935232198896,
+"width":848.3203792577165,
+"x":-1312.2124447864264,
+"y":-1273.1896902367378}],["40",{"height":1701.957013496752,
 "id":"40",
 "type":"resize",
-"width":840.5951196412351,
-"x":-1478.5242260169218,
+"width":859.2698199357318,
+"x":-1309.1924291391058,
 "y":182.14143220565586}]]}},
 "titles":{"map":{"__map":true,
 "values":[["6",{"id":"6",
@@ -58,7 +58,7 @@
 "values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"]]}},
 "windows":["6","11","12","33","38","40"],
 "zIndex":{"map":{"__map":true,
-"values":[["6",109],["11",121],["12",111],["33",122],["38",120],["40",118]]}}}
+"values":[["6",109],["11",121],["12",111],["33",118],["38",122],["40",120]]}}}
 {__codeMap: true, value: [[`6`, `    const css = \`
 @font-face {
     font-family: "OpenSans-Regular";
@@ -167,7 +167,7 @@ html, body {
     background-image: url("data:image/svg+xml,%3C%3Fxml%20version%3D%221.0%22%20encoding%3D%22UTF-8%22%3F%3E%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20version%3D%221.1%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%3E%3C!--%20Generator%3A%20Sketch%2064%20(93537)%20-%20https%3A%2F%2Fsketch.com%20--%3E%3Ctitle%3Eicon%2Fmaterial%2Ftrash-can%3C%2Ftitle%3E%3Cdesc%3ECreated%20with%20Sketch.%3C%2Fdesc%3E%3Cg%20id%3D%22icon%2Fmaterial%2Ftrash-can%22%20stroke%3D%22none%22%20stroke-width%3D%221%22%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20id%3D%22mdi-trash-can%22%3E%3Cg%20id%3D%22Icon%22%20fill%3D%22%234D4D4D%22%3E%3Cpath%20d%3D%22M9%2C3%20L9%2C4%20L4%2C4%20L4%2C6%20L5%2C6%20L5%2C19%20C5%2C20.1045695%205.8954305%2C21%207%2C21%20L17%2C21%20C18.1045695%2C21%2019%2C20.1045695%2019%2C19%20L19%2C6%20L20%2C6%20L20%2C4%20L15%2C4%20L15%2C3%20L9%2C3%20M9%2C8%20L11%2C8%20L11%2C17%20L9%2C17%20L9%2C8%20M13%2C8%20L15%2C8%20L15%2C17%20L13%2C17%20L13%2C8%20Z%22%20id%3D%22Icon-Shape%22%3E%3C%2Fpath%3E%3C%2Fg%3E%3Crect%20id%3D%22ViewBox%22%20fill-rule%3D%22nonzero%22%20x%3D%220%22%20y%3D%220%22%20width%3D%2224%22%20height%3D%2224%22%3E%3C%2Frect%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E");
 }
 
-.statusButton[status="go"] {
+.statusButton[status="start"] {
     background-image: url("data:image/svg+xml,%3Csvg%20width%3D%2224px%22%20height%3D%2224px%22%20viewBox%3D%220%200%2024%2024%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%234D4D4D%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3C!--%20Box%20outline%20--%3E%3Crect%20x%3D%223%22%20y%3D%223%22%20width%3D%2218%22%20height%3D%2218%22%20rx%3D%222%22%20ry%3D%222%22%2F%3E%3C%2Fg%3E%3C!--%20Green%20play%20triangle%20--%3E%3Cpolygon%20points%3D%229%2C7%2017%2C12%209%2C17%22%20fill%3D%22%2300AA00%22%2F%3E%3C%2Fsvg%3E");
 }
 
@@ -360,23 +360,26 @@ function parseCodeMap(string) {
                 if (!window.programState || !evt.data) {return;}
                 if (evt.data.loadData) {
                     console.log("loading");
-                    if (evt.data.loadData.code) {
-                      window.programState.registerEvent("loadRequest", evt.data.loadData.code);
-                    } else {
-                      window.programState.registerEvent("nameRequest", evt.data.loadData.name);
+                    if (evt.data.loadData.program) {
+                      window.programState.registerEvent("loadRequest", evt.data.loadData.program);
                     }
                     if (window.programState.evaluatorRunning === 0) {
                       programState.evaluator();
                     }
-                }
-                if (typeof evt.data.serverURL === "string") {
-                    window.programState.registerEvent("serverURL", evt.data.serverURL);
+                    if (evt.data.name) {
+                      window.programState.registerEvent("nameRequest", evt.data.name);
+                    }
                 }
                 if (typeof evt.data.statusChange === "string") {
                   console.log("statusChange", evt.data.statusChange);
-                    window.programState.registerEvent("statusChange", evt.data.statusChange);
+                  if (window.parent !== window && window.programState) {
+                    const g = (prop) => window.programState.resolved.get(prop).value;
+                    const savedData = g("saveData")(
+                      g("windows"), g("positions"), g("zIndex"), g("titles"),
+                      g("windowContents"), g("windowTypes"), g("padTitle"), g("windowEnabled"));
+                    window.parent.postMessage({name: g("padTitle"), savedData});
+                  }
                 }
-
             };
         </script>
     </head>
@@ -434,6 +437,18 @@ const readyHandler = Events.observe((notify) => {
   return () => window.removeEventListener("message", listener);
 });
 
+const childCodeHandler = Events.observe((notify) => {
+  const listener = (evt) => {
+    if (evt.data.savedData && evt.data.name) {
+      const data = decodeURIComponent(evt.data.savedData);
+      const loadedData = loadRenkon(data);
+      notify({source: evt.source, name: evt.data.name, program: loadedData, data});
+    }
+  }
+  window.addEventListener("message", listener);
+  return () => window.removeEventListener("message", listener);
+});
+
 ((ready, runners, programs) => {
   console.log("ready", readyHandler);
   const program = programs.map.get(ready.name);
@@ -442,28 +457,58 @@ const readyHandler = Events.observe((notify) => {
   send(runner, {loadData: program});
 })(readyHandler, runners, programs);
 
-((serverURL, runners) => {
-  console.log("serverURL", readyHandler);
-  sendAll(runners, {serverURL});
-})(serverURL, runners);
 
 ((statusChange, runners) => {
   const runner = runners.map.get(statusChange.name);
-  const oldStatus = statusChange.status === "go" ? "stop" : "go";
+  const oldStatus = statusChange.status === "start" ? "stop" : "start";
   if (!runner) {return;}
 
   send(runner, {statusChange: oldStatus});
 })(statusChange, runners);
 
-const sendAll = (runners, value) => {
-  for (const [name, runner] of runners.map) {
-    runner.contentWindow?.postMessage(value)
-  }
-};
-
 const send = (runner, value) => {
   runner.contentWindow.postMessage(value)
 }
+
+/*
+const abortHandler = ((onStatusChange, padTitle) => {
+  if (onStatusChange.url.endsWith("stop")) {
+    return padTitle;        
+  }
+  return undefined;
+})(Events.change(statuschange), padTitle);
+
+const setupOutput = ((onStatusChange, padTitle) => {
+  if (onStatusChange.url.endsWith("run")) {
+    return padTitle;        
+  }
+  return undefined;
+})(Events.change(onStatusChange), padTitle);
+*/
+
+
+const onStatusChange = ((statusChange, serverURL, programs) => {
+  console.log("statusChnage", statusChange)
+  if (statusChange.status === "start") {
+    const program = programs.map.get(statusChange.name);
+    return fetch(serverURL + "/add", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({program, name: statusChange.name})
+    });
+  }
+  if (statusChange.status === "stop") {
+    return fetch(serverURL + "/stop", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({name: statusChange.name})
+    });
+  }
+})(statusChange, serverURL, programs);
 `],
 [`38`, `const serverURL = Behaviors.keep(Events.observe((notify) => {
     const change = (evt) => {
@@ -475,7 +520,7 @@ const send = (runner, value) => {
     renkon.querySelector("#serverURL").addEventListener("input", change);
 }));
 
-const listUpdateRequest = Events.or(updateButton, readyHandler);
+const listUpdateRequest = Events.or(updateButton);
 
 console.log("listUpdateRequest", listUpdateRequest);
 
@@ -492,6 +537,7 @@ const optionsJson = Behaviors.collect({names: []},
     return fetch(realURL + "list").then((resp) => resp.json());
 });
 
+// [name, {codeMap, enabled, padTitle}]
 const programs = Behaviors.select(
   {map: new Map()},
   trash, (prev, trash) => {
@@ -501,10 +547,15 @@ const programs = Behaviors.select(
   },
   renkonProgramLoaded, (prev, program) => {
     if (program === null) {return prev;}
-    if (prev.map.get(program.name)) {return prev;}
+    if (prev.map.get(program.name) && prev.map.get(program.name).data == program.data) {return prev;}
     prev.map.set(program.name, program);
     return {map: prev.map}
   },
+  childCodeHandler, (prev, program) => {
+    if (prev.map.get(program.name).data == program.data) {return prev;}
+    prev.map.set(program.name, program);
+    return {map: prev.map}
+  }
 );
 
 const programStates = Behaviors.select(
@@ -521,7 +572,7 @@ const renkonProgram = ((programs, selected) => {
   if (already) {return already;}
   const docName = selected.name + ".renkon";
   return fetch(docName).then((resp) => resp.text()).then((result) => {
-      return {name: selected.name, code: loadRenkon(result)};
+      return {name: selected.name, program: loadRenkon(result), data: result};
   }).catch((err) => {
     console.log(\`\${docName} could not be loaded\`);
     return {name: selected.name};
@@ -580,9 +631,14 @@ const thumbnails = ((programs, programStates) => {
       "button", {
         "class": "sidebarButton statusButton",
         id: \`status-\${name}\`,
-        status: (programStates.map.get(name)?.status|| "go"),
+        status: (programStates.map.get(name)?.status|| "start"),
         onClick: (evt) => {
-          const newStatus = programStates.map.get(name)?.status === "stop" ? "go" : "stop";
+          let newStatus;
+          if (programStates.map.get(name) === undefined) {
+            newStatus = "start";
+          } else {
+            newStatus = programStates.map.get(name).status === "stop" ? "start" : "stop";
+          }
           Events.send(statusChange, {name, status: newStatus});
         }
       },
@@ -593,7 +649,8 @@ const thumbnails = ((programs, programStates) => {
 })(programs, programStates);
 
 const plusHandler = () => {
-  const newName = "untitled" + (programs.map.size + 1);
+  // const newName = "untitled" + (programs.map.size + 1);
+  const newName = "banana";
   Events.send(selected, {name: newName});
 }
 

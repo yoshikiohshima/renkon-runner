@@ -1,9 +1,9 @@
 {"padTitle":"Server-Side-Child",
 "positions":{"map":{"__map":true,
-"values":[["3",{"height":7060.770761893245,
+"values":[["3",{"height":7537.99875120427,
 "id":"3",
 "type":"resize",
-"width":1004.0933096477719,
+"width":1132.6544524597323,
 "x":1340.4681791330486,
 "y":263.3837537230511}],["4",{"height":2112.3450437672373,
 "id":"4",
@@ -25,17 +25,17 @@
 "type":"resize",
 "width":1315.1193704449306,
 "x":3690.9928604231,
-"y":4345.705045770071}],["9",{"height":4556.6767666472315,
+"y":4345.705045770071}],["9",{"height":4587.353735101625,
 "id":"9",
 "type":"resize",
 "width":877.5890216837668,
 "x":2612.9155759401565,
-"y":285.3482728111835}],["11",{"height":673.0585497834779,
+"y":285.3482728111835}],["11",{"height":601.6114336565475,
 "id":"11",
 "type":"resize",
-"width":732.4972542560679,
-"x":-748.4005834138809,
-"y":143.81818276004108}],["12",{"height":1429.3710229831745,
+"width":717.7452706662244,
+"x":-618.9316307767454,
+"y":147.55123250842507}],["12",{"height":1429.3710229831745,
 "id":"12",
 "type":"resize",
 "width":977.6616379878647,
@@ -50,7 +50,12 @@
 "type":"move",
 "width":797.0005145296376,
 "x":301.612816518757,
-"y":1779.7062944016675}]]}},
+"y":1779.7062944016675}],["19",{"height":137.47310887062002,
+"id":"19",
+"type":"move",
+"width":363.15158516885833,
+"x":-564.6494831372504,
+"y":-46.397619866449986}]]}},
 "titles":{"map":{"__map":true,
 "values":[["3",{"id":"3",
 "state":false,
@@ -72,7 +77,9 @@
 "state":false,
 "title":"New Component"}],["16",{"id":"16",
 "state":false,
-"title":"OutputConsole"}]]}},
+"title":"OutputConsole"}],["19",{"id":"19",
+"state":false,
+"title":"iframe receivers"}]]}},
 "version":2,
 "windowEnabled":{"map":{"__map":true,
 "values":[["3",{"enabled":true,
@@ -84,13 +91,14 @@
 "id":"9"}],["11",{"enabled":true,
 "id":"11"}],["12",{"enabled":true,
 "id":"12"}],["15",{"enabled":true,
-"id":"15"}],["16",{"enabled":true,
-"id":"16"}]]}},
+"id":"15"}],["16",{"enabled":false,
+"id":"16"}],["19",{"enabled":true,
+"id":"19"}]]}},
 "windowTypes":{"map":{"__map":true,
-"values":[["3","code"],["4","code"],["5","code"],["6","code"],["7","code"],["9","code"],["11","code"],["12","code"],["15","code"],["16","code"]]}},
-"windows":["3","4","5","6","7","9","11","12","15","16"],
+"values":[["3","code"],["4","code"],["5","code"],["6","code"],["7","code"],["9","code"],["11","code"],["12","code"],["15","code"],["16","code"],["19","code"]]}},
+"windows":["3","4","5","6","7","9","11","12","15","16","19"],
 "zIndex":{"map":{"__map":true,
-"values":[["3",105],["4",104],["5",103],["6",110],["7",112],["9",100],["11",113],["12",109],["15",111],["16",114]]}}}
+"values":[["3",105],["4",104],["5",103],["6",110],["7",112],["9",100],["11",114],["12",109],["15",111],["16",113],["19",115]]}}}
 {__codeMap: true, value: [[`3`, `    const addCode = Events.listener(renkon.querySelector("#addCodeButton"), "click", () => "code");
     const save = Events.listener(renkon.querySelector("#saveButton"), "click", (evt) => evt);
     const load = Events.listener(renkon.querySelector("#loadButton"), "click", (evt) => evt);
@@ -104,7 +112,6 @@
     const navigationAction = Events.or(home, zoomIn, zoomOut, homeUponLoad);
 
     const padViewChange = Events.receiver();
-    const statusChange = Events.receiver();
 
     const _padViewUpdate = ((padView) => {
         const mover = document.querySelector("#mover");
@@ -255,45 +262,6 @@
         if (showGraph === "hide") {str = "hide graph"}
         document.querySelector("#showGraph").textContent = str;
     })(showGraph);
-
-    const onStatusChange = ((statusChange, serverURL, windowContents, padTitle, windowEnabled) => {
-      console.log("statusChnage", statusChange)
-      if (statusChange === "go") {
-        const code = [...windowContents.map]
-            .filter(([id, obj]) => obj.state && windowEnabled.map.get(id).enabled)
-            .map(([_id, editor]) => editor.state.doc.toString());
-        return fetch(serverURL + "/run", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({code: code, name: padTitle})
-        });
-      }
-      if (statusChange === "stop") {
-        return fetch(serverURL + "/stop", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({name: padTitle})
-        });
-      }
-    })(statusChange, serverURL, windowContents, padTitle, windowEnabled);
-
-    const abortHandler = ((onStatusChange, padTitle) => {
-      if (onStatusChange.url.endsWith("stop")) {
-        return padTitle;        
-      }
-      return undefined;
-    })(Events.change(onStatusChange), padTitle);
-
-    const setupOutput = ((onStatusChange, padTitle) => {
-      if (onStatusChange.url.endsWith("run")) {
-        return padTitle;        
-      }
-      return undefined;
-    })(Events.change(onStatusChange), padTitle);
 
     const _onInspect = ((inspectRequest) => {
         const id = inspectRequest.id;
@@ -1440,8 +1408,6 @@ const renkon = (() => {
     return renkon;
 })();
 
-const serverURL = Behaviors.receiver();
-const nameRequest = Events.receiver();
 `],
 [`12`, `function stringifyInner(node, seen) {
     if (node === undefined) return undefined;
@@ -1664,4 +1630,8 @@ const logs = Events.select(
       background: "linear-gradient(to right, #00b09b, #96c93d)",
     },
   }).showToast();
-})(logs);`]]}
+})(logs);`],
+[`19`, `
+const serverURL = Behaviors.receiver();
+const nameRequest = Events.receiver();
+`]]}

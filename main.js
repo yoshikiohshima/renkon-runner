@@ -3,6 +3,7 @@ import cors from "cors";
 import {spawn} from "child_process";
 
 import {EventSource,  RecordsWriter} from "./record.js";
+import {loadRenkon} from "./loadRenkon.js";
 
 const app = express();
 app.use(cors());
@@ -10,7 +11,6 @@ app.use(cors());
 const processes = new Map();
 
 const outputResponses = new Map(); // [name, [respons]]
-// const outputRequests = new Map(); // [name, {request, response}]
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -50,32 +50,67 @@ function setOutput(name, child) {
     });
 }
 
-function send(process, code) {
+function send(process, data) {
     process.stdin.cork();
-    process.stdin.write(JSON.stringify(code), "utf-8");
+    process.stdin.write(JSON.stringify(data), "utf-8");
     process.stdin.uncork();
 }
 
-app.post("/run", async (req, res) => {
-    const code = req.body.code;
-    const name = req.body.name || "main";
+app.post("/add", async (req, res) => {
+    const data = req.body.data;
+    const name = req.body.name;
 
-    if (Array.isArray(code)) {
+    if (!name || !data) {
+        return res.end("no body");
+    }
+
+    debugger;
+    const loaded = loadRenkon(data);
+
+    if (Array.isArray(loaded.code)) {
+        const code = [...loaded.code].filter(([id, code]) => data.windowEnabled.map.get(id).enabled)
+          .map(([_id, code]) => code);
         let process = processes.get(name);
         if (!process) {
             process = await newProcess();
             processes.set(name, process);
             setOutput(name, process);
         }
-        send(process, code);
+        send(process, {code: code, status: "start"});
     }
-    console.log("run", name);
+    console.log("add", name);
     return res.status(200).end(JSON.stringify({message: "code received"}));
 });
 
+app.post("/start", async (req, res) => {
+    const name = req.body.name;
+
+    if (!name) {return res.end("no name");}
+
+    const process = processes.get(name);
+
+    if (!process) {return res.end("no process to start");}
+
+    console.log("start", name);
+    send(process, {status: "start"});
+    return res.status(200).end(JSON.stringify({message: "program started"}));
+});
+
+app.post("/pause", async (req, res) => {
+    const name = req.body.name;
+    if (!name) {res.end("no body");}
+    const process = processes.get(name);
+
+    if (!process) {return res.end("no process to end");}
+    
+    console.log("pause", name);
+    send(process, {status: "stop"});
+    return res.status(200).end(JSON.stringify({message: "program paused"}));
+});
+
 app.post("/stop", async (req, res) => {
-    if (!req.body.name) {res.end("no body");}
-    const name = req.body.name || "main";
+    const name = req.body.name;
+    if (!name) {res.end("no body");}
     const process = processes.get(name);
     if (process) {
         process.kill("SIGTERM");
@@ -150,14 +185,28 @@ function getProgramsFromStore(baseURL) {
         }
     }
     
-    url.searchParams.set("querysetjson", JSON.stringify(programsQuery))
+    url.searchParams.set("querysetjson", JSON.stringify(programsQuery));
     return fetch(url.toString());
 }
 
 const maybeBaseURL = process.argv[process.argv.length - 1];
 
 if (maybeBaseURL.startsWith("http")) {
-    getProgramsFromStore(maybeBaseURL).then((records) => records.json()).then((json) => console.log(json));
+    getProgramsFromStore(maybeBaseURL).then((records) => {
+         return records.json();
+    }).then((json) => {
+        const programs = json.programs;
+        for (const program of programs) {
+            console.log(program.fields);
+            const path = program.fields.path;
+            const slash = path.indexOf("/");
+            const progName = slash >= 0 ? path.slice(0, slash) : undefined;
+            /*
+            const code = program.fields.code;
+            if (code) {
+            }*/
+        }
+    });
 }
 
 // const recordsWriter = new RecordsWriter();
@@ -186,7 +235,7 @@ fetch(url.toString())
 
 https://substrate-3533.local/events;data=substrate-bootstrap-dev121
 
-env NODE_TLS_REJECT_UNAUTHORIZED=0 node main.js https://substrate-3533.local/events;data=substrate-bootstrap-dev121
+env NODE_TLS_REJECT_UNAUTHORIZED=0 node main.js "https://substrate-3533.local/events;data=substrate-bootstrap-dev121"
 
 
 */
