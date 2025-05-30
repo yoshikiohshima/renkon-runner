@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import {spawn} from "child_process";
 
+import {EventSource,  RecordsWriter} from "./record.js";
+
 const app = express();
 app.use(cors());
 
@@ -133,4 +135,59 @@ const server = app.listen(port, () => {
 
 server.keepAliveTimeout = 60 * 1000;
 server.headersTimeout = 60 * 1000;
+
+function getProgramsFromStore(baseURL) {
+    const url = new URL(`${baseURL}/stream/events`);
+
+    const programsQuery = {
+        programs: {
+            view_criteria: {
+                where: {
+                    path: [{compare: "like", value: "/programs/%"}],
+                },
+            },
+            view: "group-by-path-max-id",
+        }
+    }
+    
+    url.searchParams.set("querysetjson", JSON.stringify(programsQuery))
+    return fetch(url.toString());
+}
+
+const maybeBaseURL = process.argv[process.argv.length - 1];
+
+if (maybeBaseURL.startsWith("http")) {
+    getProgramsFromStore(maybeBaseURL).then((records) => records.json()).then((json) => console.log(json));
+}
+
+// const recordsWriter = new RecordsWriter();
+
+/*
+
+const qsA = {
+    programs: {
+        view_criteria: {
+            where: {
+                path: [{compare: "like", value: "/programs/%"}],
+            },
+        },
+        view: "group-by-path-max-id",
+    }
+}
+
+////
+
+// If Accept: text/event-stream, then it gives a streaming result
+// Otherwise returns a single response
+
+const url = new URL(`${recordstorebaseurl}/stream/events`)
+url.searchParams.set("querysetjson", JSON.stringify(qsA))
+fetch(url.toString())
+
+https://substrate-3533.local/events;data=substrate-bootstrap-dev121
+
+env NODE_TLS_REJECT_UNAUTHORIZED=0 node main.js https://substrate-3533.local/events;data=substrate-bootstrap-dev121
+
+
+*/
 
