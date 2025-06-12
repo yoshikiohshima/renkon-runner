@@ -61,13 +61,17 @@ function setOutput(name, child) {
             entries.response.write(result);
         }
     });
+    child.stderr.on("data", (chunk) => {
+        const result = chunk.toString();
+        console.log("error", result);
+    });
 }
 
 function send(process, data) {
     console.log("send", data);
     
     process.stdin.cork();
-    process.stdin.write(JSON.stringify(data), "utf-8");
+    process.stdin.write(JSON.stringify(data) + "\n", "utf-8");
     process.stdin.uncork();
 }
 

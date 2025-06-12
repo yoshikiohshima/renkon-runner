@@ -15,22 +15,32 @@
 "type":"move",
 "width":854.1451621960841,
 "x":1273.727752950642,
-"y":-264.3996035759288}],["33",{"height":3753.236926748539,
+"y":-264.3996035759288}],["33",{"height":3489.663953620072,
 "id":"33",
-"type":"resize",
-"width":985.5328333450245,
-"x":-2881.3375921966845,
-"y":-1635.1529942596935}],["38",{"height":1341.1349567550646,
+"type":"move",
+"width":862.351073572269,
+"x":-2638.3309354125213,
+"y":-1629.98688724484}],["38",{"height":1279.42598994181,
 "id":"38",
 "type":"resize",
-"width":848.3203792577165,
+"width":812.0305947353447,
 "x":-1312.2124447864264,
 "y":-1273.1896902367378}],["40",{"height":1701.957013496752,
 "id":"40",
 "type":"resize",
 "width":859.2698199357318,
 "x":-1309.1924291391058,
-"y":182.14143220565586}]]}},
+"y":182.14143220565586}],["95",{"height":1353.6972256328793,
+"id":"95",
+"type":"move",
+"width":696.9811162158926,
+"x":-3489.8545864597095,
+"y":-1624.3150174926589}],["96",{"height":459.2743380161808,
+"id":"96",
+"type":"resize",
+"width":508.7212944384493,
+"x":-4056.55004528033,
+"y":-1324.0419579151533}]]}},
 "titles":{"map":{"__map":true,
 "values":[["6",{"id":"6",
 "state":false,
@@ -44,7 +54,11 @@
 "state":false,
 "title":"Data"}],["40",{"id":"40",
 "state":false,
-"title":"Program List"}]]}},
+"title":"Program List"}],["95",{"id":"95",
+"state":false,
+"title":"untitled"}],["96",{"id":"96",
+"state":false,
+"title":"untitled"}]]}},
 "version":2,
 "windowEnabled":{"map":{"__map":true,
 "values":[["6",{"enabled":true,
@@ -53,12 +67,14 @@
 "id":"12"}],["33",{"enabled":true,
 "id":"33"}],["38",{"enabled":true,
 "id":"38"}],["40",{"enabled":true,
-"id":"40"}]]}},
+"id":"40"}],["95",{"enabled":true,
+"id":"95"}],["96",{"enabled":true,
+"id":"96"}]]}},
 "windowTypes":{"map":{"__map":true,
-"values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"]]}},
-"windows":["6","11","12","33","38","40"],
+"values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"],["95","code"],["96","code"]]}},
+"windows":["6","11","12","33","38","40","95","96"],
 "zIndex":{"map":{"__map":true,
-"values":[["6",109],["11",121],["12",118],["33",122],["38",111],["40",120]]}}}
+"values":[["6",109],["11",121],["12",118],["33",122],["38",111],["40",120],["95",123],["96",124]]}}}
 {__codeMap: true, value: [[`6`, `    const css = \`
 @font-face {
     font-family: "OpenSans-Regular";
@@ -484,7 +500,7 @@ const onStatusChange = ((statusChangeHandler, serverURL) => {
     } else {
       promise = Promise.resolve(true);
     }
-    return promise;
+    // return promise;
     return promise.then(() => fetch(serverURL + "/status", {
       method: "POST",
       headers: {
@@ -650,4 +666,86 @@ const _stop = ((trash) => {
     });
 })(trash);
 */
-`]]}
+`],
+[`95`, `const abortController = Behaviors.collect(new AbortController(), abortHandler, (a, b) => {
+  a.abort(); 
+  return new AbortController();
+});
+
+async function* consoleOutput(name, controller) {
+  console.log("consoleOutput");
+  if (!controller) {
+    controller = new AbortController();
+  }
+
+  const response = await fetch(\`\${serverURL}/stdout/\${name}\`, {
+    headers: {
+      'Connection': 'keep-alive',
+      'Content-Type': 'application/octet-stream',
+      'Accept': 'text/event-stream',
+    },
+    signal: controller.signal
+  });
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  try {
+    let cont = true;
+    while (cont) {
+      const result = await reader.read();
+      if (result.done) {
+        break;
+      }
+      const text = decoder.decode(result.value);
+      yield text;
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error("llama error: ", e);
+    }
+    throw e;
+  } finally {
+    controller.abort();
+  }
+};
+
+const output = consoleOutput(setupOutput, abortController);
+const logP = Events.next(output);
+const log = Events.change(logP);
+const logTimer = Events.timer(1000);
+
+const logs = Events.select(
+  {acc: [], log: null},
+  log, (prev, log) => {
+    prev.acc.push(log.value);
+    return {acc: prev.acc, log: null};
+  },
+  logTimer, (prev, timer) => {
+    return {acc: [], log: prev.acc.join("\\n")}
+  }
+);
+
+((logs) => {
+  if (!logs.log) {return;}
+  window.Toastify({
+    text: logs.log,
+    duration: 750,
+    stopOnFocus: false,
+    gravity: "bottom", // \`top\` or \`bottom\`
+    position: "right", // \`left\`, \`center\` or \`right\`
+    style: {
+      background: "linear-gradient(to right, #00b09b, #96c93d)",
+    },
+  }).showToast();
+})(logs);`],
+[`96`, `const outputs = Behaviors.collect(
+  [],
+  addProcess, (prev, name) => {
+    if (prev.includes(name)) {
+      return prev;
+    }
+    return [...prev, name]
+  }
+);
+
+const streams = `]]}

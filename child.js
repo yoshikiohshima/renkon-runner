@@ -1,3 +1,4 @@
+import readline from "readline";
 import {ProgramState} from "renkon-core";
 
 import {EventSource, RecordsWriter} from "./record.js";
@@ -9,9 +10,13 @@ const bindings = {
 
 const programState = new ProgramState(Date.now(), bindings);
 
-process.stdin.on("data", (chunk) => {
-    console.log("child", chunk.toString());
-    const input = JSON.parse(chunk.toString());
+const rl = readline.createInterface({
+    input: process.stdin,
+    terminal: false
+});
+
+rl.on("line", (line) => {
+    const input = JSON.parse(line);
     console.log("input", input);
     if (input.code) {
         programState.setupProgram(input.code);
@@ -26,7 +31,7 @@ process.stdin.on("data", (chunk) => {
         } else if (input.status === "stop") {
             if (programState.evaluatorRunning !== 0) {
                 clearInterval(programState.evaluatorRunning);
-                programState.evaluatorRunning == 0;
+                programState.evaluatorRunning = 0;
             }
         }
     }
