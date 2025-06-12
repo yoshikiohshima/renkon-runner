@@ -9,17 +9,30 @@ const app = express();
 app.use(cors());
 
 const processes = new Map();
-
-const outputResponses = new Map(); // [name, [respons]]
+const outputResponses = new Map(); // [name, [response]]
+const status = new Map(); // [name, string]
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+/* the status for a server side program is keyed by a name
+   if it is under the control of this server, it has an entry in processes
+   if it is under the control of this server, it has an entry in processes
+   status is running or paused
+
+   - /add: put a program under server's control. instantiate if the process for this name
+     does not exist. Send program to the process.
+   - /remove kill the process if it exists.
+
+   - /start send message to tell the process to start ticking
+   - /stop send message to tell the process to stop ticking
+*/
+   
 function newProcess() {
     const child = spawn(
         process.argv[0],
         [
-//            "--inspect-brk",
+            // "--inspect-brk",
             "child.js"
         ],
         {
@@ -40,17 +53,19 @@ function setOutput(name, child) {
     // child.stdout.pipe(process.stdout);
     child.stdout.on("data", (chunk) => {
         const result = chunk.toString();
-        // console.log("result", result);
+        console.log("result", result);
         const array = outputResponses.get(name);
         if (!array) {return;}
         for (const entries of array) {
-            // console.log("sending", result);
+            console.log("sending", result);
             entries.response.write(result);
         }
     });
 }
 
 function send(process, data) {
+    console.log("send", data);
+    
     process.stdin.cork();
     process.stdin.write(JSON.stringify(data), "utf-8");
     process.stdin.uncork();
@@ -64,58 +79,33 @@ app.post("/add", async (req, res) => {
         return res.end("no body");
     }
 
-    debugger;
     const loaded = loadRenkon(data);
-
-    if (Array.isArray(loaded.code)) {
-        const code = [...loaded.code].filter(([id, code]) => data.windowEnabled.map.get(id).enabled)
+    if (loaded.code) {
+        const code = [...loaded.code].filter(([id, code]) => loaded.windowEnabled.map.get(id).enabled)
           .map(([_id, code]) => code);
         let process = processes.get(name);
         if (!process) {
             process = await newProcess();
             processes.set(name, process);
+            console.log("added proc", name);
             setOutput(name, process);
+            status.set(name, "pause");
         }
-        send(process, {code: code, status: "start"});
+        send(process, {message: "add", code: code});
     }
     console.log("add", name);
     return res.status(200).end(JSON.stringify({message: "code received"}));
 });
 
-app.post("/start", async (req, res) => {
+app.post("/remove", async (req, res) => {
     const name = req.body.name;
-
-    if (!name) {return res.end("no name");}
-
-    const process = processes.get(name);
-
-    if (!process) {return res.end("no process to start");}
-
-    console.log("start", name);
-    send(process, {status: "start"});
-    return res.status(200).end(JSON.stringify({message: "program started"}));
-});
-
-app.post("/pause", async (req, res) => {
-    const name = req.body.name;
-    if (!name) {res.end("no body");}
-    const process = processes.get(name);
-
-    if (!process) {return res.end("no process to end");}
-    
-    console.log("pause", name);
-    send(process, {status: "stop"});
-    return res.status(200).end(JSON.stringify({message: "program paused"}));
-});
-
-app.post("/stop", async (req, res) => {
-    const name = req.body.name;
-    if (!name) {res.end("no body");}
+    if (!name) {res.end("no name");}
     const process = processes.get(name);
     if (process) {
         process.kill("SIGTERM");
     }
     processes.delete(name);
+    status.delete(name);
     const array = outputResponses.get(name);
     if (array) {
         for (const entry of array) {
@@ -123,13 +113,30 @@ app.post("/stop", async (req, res) => {
         }
         outputResponses.delete(name);
     }
-    console.log("stop", name);
+    console.log("remove", name);
     res.end("done");
+});
+
+app.post("/status", async (req, res) => {
+    const name = req.body.name;
+    const status = req.body.status;
+    // if status is a string, that is used to change the status. otherwise it is
+    // a query to see the current value.
+
+    if (!name) {return res.end("no name");}
+    const process = processes.get(name);
+    if (!process) {return res.end("no process to start");}
+
+    if (status) {
+        send(process, {status});
+        return res.status(200).end(JSON.stringify({message: "program status changed:", status}));
+    }
+    return res.status(200).end(JSON.stringify({message: "program status"}));
 });
 
 app.get("/list", async (req, res) => {
     console.log(JSON.stringify([...processes.keys()]));
-    res.json({names: [...processes.keys()]});
+    res.json({status: [...processes.keys()].map((k) => ({name: k, status: status.get(k)}))});
 });
 
 app.get("/stdout/:name", async (req, res) => {

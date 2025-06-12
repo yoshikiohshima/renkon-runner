@@ -14,13 +14,13 @@
 "id":"12",
 "type":"move",
 "width":854.1451621960841,
-"x":1163.1832287090183,
-"y":-264.3996035759288}],["33",{"height":3921.1251786319344,
+"x":1273.727752950642,
+"y":-264.3996035759288}],["33",{"height":3753.236926748539,
 "id":"33",
-"type":"move",
-"width":1129.2046819197453,
-"x":-2894.6574353584424,
-"y":-1107.210738721981}],["38",{"height":1341.1349567550646,
+"type":"resize",
+"width":985.5328333450245,
+"x":-2881.3375921966845,
+"y":-1635.1529942596935}],["38",{"height":1341.1349567550646,
 "id":"38",
 "type":"resize",
 "width":848.3203792577165,
@@ -58,7 +58,7 @@
 "values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"]]}},
 "windows":["6","11","12","33","38","40"],
 "zIndex":{"map":{"__map":true,
-"values":[["6",109],["11",121],["12",111],["33",118],["38",122],["40",120]]}}}
+"values":[["6",109],["11",121],["12",118],["33",122],["38",111],["40",120]]}}}
 {__codeMap: true, value: [[`6`, `    const css = \`
 @font-face {
     font-family: "OpenSans-Regular";
@@ -377,7 +377,7 @@ function parseCodeMap(string) {
                     const savedData = g("saveData")(
                       g("windows"), g("positions"), g("zIndex"), g("titles"),
                       g("windowContents"), g("windowTypes"), g("padTitle"), g("windowEnabled"));
-                    window.parent.postMessage({name: g("padTitle"), savedData});
+                    window.parent.postMessage({statusChange: evt.data.statusChange, name: g("padTitle"), savedData});
                   }
                 }
             };
@@ -437,12 +437,13 @@ const readyHandler = Events.observe((notify) => {
   return () => window.removeEventListener("message", listener);
 });
 
-const childCodeHandler = Events.observe((notify) => {
+const statusChangeHandler = Events.observe((notify) => {
   const listener = (evt) => {
-    if (evt.data.savedData && evt.data.name) {
+    console.log(evt.data);
+    if (evt.data.statusChange) {
       const data = decodeURIComponent(evt.data.savedData);
       const loadedData = loadRenkon(data);
-      notify({source: evt.source, name: evt.data.name, program: loadedData, data});
+      notify({statusChange: evt.data.statusChange, name: evt.data.name, program: loadedData, data});
     }
   }
   window.addEventListener("message", listener);
@@ -460,55 +461,39 @@ const childCodeHandler = Events.observe((notify) => {
 
 ((statusChange, runners) => {
   const runner = runners.map.get(statusChange.name);
-  const oldStatus = statusChange.status === "start" ? "stop" : "start";
   if (!runner) {return;}
-
-  send(runner, {statusChange: oldStatus});
+  send(runner, {statusChange: statusChange.status});
 })(statusChange, runners);
 
 const send = (runner, value) => {
-  runner.contentWindow.postMessage(value)
+  runner.contentWindow.postMessage(value);
 }
 
-/*
-const abortHandler = ((onStatusChange, padTitle) => {
-  if (onStatusChange.url.endsWith("stop")) {
-    return padTitle;        
-  }
-  return undefined;
-})(Events.change(statuschange), padTitle);
-
-const setupOutput = ((onStatusChange, padTitle) => {
-  if (onStatusChange.url.endsWith("run")) {
-    return padTitle;        
-  }
-  return undefined;
-})(Events.change(onStatusChange), padTitle);
-*/
-
-
-const onStatusChange = ((statusChange, serverURL, programs) => {
-  console.log("statusChnage", statusChange)
-  if (statusChange.status === "start") {
-    const program = programs.map.get(statusChange.name);
-    return fetch(serverURL + "/add", {
+const onStatusChange = ((statusChangeHandler, serverURL) => {
+  console.log("statusChange", statusChangeHandler);
+  if (statusChangeHandler.statusChange === "start" || statusChangeHandler.statusChange === "stop") {
+    let promise;
+    if (statusChangeHandler.statusChange === "start") {
+      promise = fetch(serverURL + "/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({data: statusChangeHandler.data, name: statusChangeHandler.name})
+      });
+    } else {
+      promise = Promise.resolve(true);
+    }
+    return promise;
+    return promise.then(() => fetch(serverURL + "/status", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({program, name: statusChange.name})
-    });
+      body: JSON.stringify({status: statusChangeHandler.statusChange, name: statusChangeHandler.name})
+    }));
   }
-  if (statusChange.status === "stop") {
-    return fetch(serverURL + "/stop", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({name: statusChange.name})
-    });
-  }
-})(statusChange, serverURL, programs);
+})(statusChangeHandler, serverURL);
 `],
 [`38`, `const serverURL = Behaviors.keep(Events.observe((notify) => {
     const change = (evt) => {
@@ -545,14 +530,9 @@ const programs = Behaviors.select(
     prev.map.delete(trash);
     return {map: prev.map}
   },
-  renkonProgramLoaded, (prev, program) => {
+  Events.or(renkonProgramLoaded, statusChangeHandler), (prev, program) => {
     if (program === null) {return prev;}
-    if (prev.map.get(program.name) && prev.map.get(program.name).data == program.data) {return prev;}
-    prev.map.set(program.name, program);
-    return {map: prev.map}
-  },
-  childCodeHandler, (prev, program) => {
-    if (prev.map.get(program.name).data == program.data) {return prev;}
+    if (prev.map.get(program.name)?.data === program.data) {return prev;}
     prev.map.set(program.name, program);
     return {map: prev.map}
   }
