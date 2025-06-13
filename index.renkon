@@ -2,13 +2,13 @@
 "positions":{"map":{"__map":true,
 "values":[["6",{"height":2725.4630229388795,
 "id":"6",
-"type":"resize",
-"width":1244.1061060080397,
-"x":-99.3602965940236,
-"y":-261.0542546571053}],["11",{"height":596.7830539500513,
-"id":"11",
 "type":"move",
-"width":617.0552724252162,
+"width":1244.1061060080397,
+"x":-94.27706523894264,
+"y":372.53089552819284}],["11",{"height":891.0975729567003,
+"id":"11",
+"type":"resize",
+"width":543.6354392457251,
 "x":-80.18909181201093,
 "y":-914.9941746340685}],["12",{"height":1732.8831767708493,
 "id":"12",
@@ -30,17 +30,17 @@
 "type":"resize",
 "width":859.2698199357318,
 "x":-1309.1924291391058,
-"y":182.14143220565586}],["95",{"height":1353.6972256328793,
+"y":182.14143220565586}],["95",{"height":1050.6607852258355,
 "id":"95",
-"type":"move",
-"width":696.9811162158926,
-"x":-3489.8545864597095,
-"y":-1624.3150174926589}],["96",{"height":459.2743380161808,
-"id":"96",
 "type":"resize",
-"width":508.7212944384493,
-"x":-4056.55004528033,
-"y":-1324.0419579151533}]]}},
+"width":681.630180686822,
+"x":-3489.8545864597095,
+"y":-1624.3150174926589}],["96",{"height":793.3825569579437,
+"id":"96",
+"type":"move",
+"width":768.8671761854293,
+"x":-4362.500282751146,
+"y":-1618.9168250381772}]]}},
 "titles":{"map":{"__map":true,
 "values":[["6",{"id":"6",
 "state":false,
@@ -74,7 +74,7 @@
 "values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"],["95","code"],["96","code"]]}},
 "windows":["6","11","12","33","38","40","95","96"],
 "zIndex":{"map":{"__map":true,
-"values":[["6",109],["11",121],["12",118],["33",122],["38",111],["40",120],["95",123],["96",124]]}}}
+"values":[["6",124],["11",121],["12",118],["33",122],["38",111],["40",120],["95",123],["96",109]]}}}
 {__codeMap: true, value: [[`6`, `    const css = \`
 @font-face {
     font-family: "OpenSans-Regular";
@@ -222,7 +222,24 @@ const renkon = (() => {
 
     document.body.querySelector("#renkon")?.remove();
     document.body.appendChild(renkon);
-    return renkon;
+
+    const link = document.createElement("link");
+    link.id = "toastify-css";
+    link.rel = "stylesheet";
+    link.type = "text/css";
+    link.href = "./toastify.min.css";
+    document.head.querySelector("#toastify-css")?.remove();
+    document.head.appendChild(link);
+
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.id = "toastify-js";
+      script.type = "text/javascript";
+      script.src = "./toastify.min.js";
+      script.onload = () => resolve(renkon);
+      document.head.querySelector("#toastify-js")?.remove();
+      document.head.appendChild(script);
+    });
 })();
 
 const updateButton = Events.listener(
@@ -331,8 +348,6 @@ function parseCodeMap(string) {
 <html>
     <head>
         <meta charset="utf-8">
-        <link rel="stylesheet" type="text/css" href="./toastify.min.css">
-        <script type="text/javascript" src="./toastify.min.js"></script>
         <style>
         </style>
         <script type="module">
@@ -500,14 +515,13 @@ const onStatusChange = ((statusChangeHandler, serverURL) => {
     } else {
       promise = Promise.resolve(true);
     }
-    // return promise;
-    return promise.then(() => fetch(serverURL + "/status", {
+    return {name: statusChangeHandler.name, response: promise.then(() => fetch(serverURL + "/status", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({status: statusChangeHandler.statusChange, name: statusChangeHandler.name})
-    }));
+    }))};
   }
 })(statusChangeHandler, serverURL);
 `],
@@ -646,8 +660,13 @@ const thumbnails = ((programs, programStates) => {
 
 const plusHandler = () => {
   // const newName = "untitled" + (programs.map.size + 1);
-  const newName = "banana";
-  Events.send(selected, {name: newName});
+  let newName;
+  if (programs.map.size === 0)
+    newName = "banana";
+  else if (programs.map.size === 1)
+    newName = "apple";
+  if (newName) 
+    Events.send(selected, {name: newName});
 }
 
 render(thumbnails, renkon.querySelector("#thumbnailsHolder"));
@@ -667,63 +686,62 @@ const _stop = ((trash) => {
 })(trash);
 */
 `],
-[`95`, `const abortController = Behaviors.collect(new AbortController(), abortHandler, (a, b) => {
-  a.abort(); 
-  return new AbortController();
-});
-
-async function* consoleOutput(name, controller) {
-  console.log("consoleOutput");
-  if (!controller) {
-    controller = new AbortController();
-  }
-
-  const response = await fetch(\`\${serverURL}/stdout/\${name}\`, {
-    headers: {
-      'Connection': 'keep-alive',
-      'Content-Type': 'application/octet-stream',
-      'Accept': 'text/event-stream',
-    },
-    signal: controller.signal
+[`95`, `function loggingComponent({name, serverURL, ticker}) {
+  const streamName = Behaviors.keep(name);
+  const serverURLB = Behaviors.keep(serverURL);
+  const abortHandler = Events.receiver();
+  const abortController = Behaviors.collect(new AbortController(), abortHandler, (a, b) => {
+    a.abort(); 
+    return new AbortController();
   });
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
 
-  try {
-    let cont = true;
-    while (cont) {
-      const result = await reader.read();
-      if (result.done) {
-        break;
+  console.log("abortController", abortController);
+
+  async function* consoleOutput(name, controller) {
+    console.log("consoleOutput");
+    if (!controller) {
+      controller = new AbortController();
+    }
+    
+    const response = await fetch(\`\${serverURLB}/stdout/\${streamName}\`, {
+      headers: {
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/octet-stream',
+        'Accept': 'text/event-stream',
+      },
+      signal: controller.signal
+    });
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    try {
+      let cont = true;
+      while (cont) {
+        const result = await reader.read();
+        if (result.done) {
+          break;
+        }
+        const text = decoder.decode(result.value);
+        yield text;
       }
-      const text = decoder.decode(result.value);
-      yield text;
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        console.error("event source error: ", e);
+      }
+      throw e;
+    } finally {
+      controller.abort();
     }
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      console.error("llama error: ", e);
-    }
-    throw e;
-  } finally {
-    controller.abort();
-  }
+  };
+
+  const output = consoleOutput(streamName, abortController);
+  const logP = Events.next(output);
+  const log = Events.change(logP);
+  return {log};
 };
 
-const output = consoleOutput(setupOutput, abortController);
-const logP = Events.next(output);
-const log = Events.change(logP);
-const logTimer = Events.timer(1000);
+/*
 
-const logs = Events.select(
-  {acc: [], log: null},
-  log, (prev, log) => {
-    prev.acc.push(log.value);
-    return {acc: prev.acc, log: null};
-  },
-  logTimer, (prev, timer) => {
-    return {acc: [], log: prev.acc.join("\\n")}
-  }
-);
 
 ((logs) => {
   if (!logs.log) {return;}
@@ -737,15 +755,46 @@ const logs = Events.select(
       background: "linear-gradient(to right, #00b09b, #96c93d)",
     },
   }).showToast();
-})(logs);`],
-[`96`, `const outputs = Behaviors.collect(
-  [],
+})(logs);
+*/`],
+[`96`, `const outputs = Behaviors.select(
+  {map: new Map()},
   addProcess, (prev, name) => {
-    if (prev.includes(name)) {
+    if (prev.map.get(name)) {
       return prev;
     }
-    return [...prev, name]
+    Renkon.merge([\`
+      function merged({}) {
+        const \${name}_logger = component({name: "\${name}", serverURL, ticker}, "\${name}");
+        return []
+      }\`]);
+    prev.map.set(name, name);
   }
 );
 
-const streams = `]]}
+const component = Renkon.component(Renkon.findDecl("loggingComponent"));
+
+const ticker = Events.timer(500);
+
+const requestDone = Events.resolvePart(onStatusChange);
+
+const addProcess = requestDone.name;
+
+const gathered = Behaviors.gather("_logger\$");
+
+((gathered, selectedProgram) => {
+  if (!selectedProgram) {return;}
+  const log = gathered[selectedProgram.name + "_logger"];
+  console.log(log);
+  if (!log?.log?.value) {return;}
+  window.Toastify({
+    text: log.log.value,
+    duration: 750,
+    stopOnFocus: false,
+    gravity: "bottom", // \`top\` or \`bottom\`
+    position: "right", // \`left\`, \`center\` or \`right\`
+    style: {
+      background: "linear-gradient(to right, #00b09b, #96c93d)",
+    },
+  }).showToast();
+})(gathered, selectedProgram);`]]}

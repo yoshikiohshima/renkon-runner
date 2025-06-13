@@ -12,6 +12,8 @@ const processes = new Map();
 const outputResponses = new Map(); // [name, [response]]
 const status = new Map(); // [name, string]
 
+const logs = new Map(); // [name, string]
+
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
@@ -53,19 +55,36 @@ function setOutput(name, child) {
     // child.stdout.pipe(process.stdout);
     child.stdout.on("data", (chunk) => {
         const result = chunk.toString();
-        console.log("result", result);
-        const array = outputResponses.get(name);
-        if (!array) {return;}
-        for (const entries of array) {
-            console.log("sending", result);
-            entries.response.write(result);
+        // console.log("result", result);
+        let logArray = logs.get(name);
+        if (!logArray) {
+            logArray = [];
+            logs.set(name, logArray);
         }
+        logArray.push(result);
     });
     child.stderr.on("data", (chunk) => {
         const result = chunk.toString();
         console.log("error", result);
     });
 }
+
+function sendOutput() {
+    // console.log("sendoutput");
+    for (const name of logs.keys()) {
+        const log = logs.get(name);
+        if (log.length === 0) {continue;}
+        const array = outputResponses.get(name);
+        if (!array) {continue;}
+        for (const entries of array) {
+            // console.log("sending", log.join(""));
+            entries.response.write(log.join(""));
+        }
+        logs.set(name, []);
+    }
+}
+
+setInterval(sendOutput, 1000);
 
 function send(process, data) {
     console.log("send", data);

@@ -6728,6 +6728,48 @@ function findDeclarations(node2, input) {
   }
   return declarations;
 }
+function findTopLevelDeclarations(node2) {
+  var _a2, _b2;
+  const declarations = [];
+  function declareLocal(node22) {
+    declarations.push(node22.name);
+  }
+  function declarePattern(node22) {
+    switch (node22.type) {
+      case "Identifier":
+        declareLocal(node22);
+        break;
+      case "ObjectPattern":
+        node22.properties.forEach((node3) => declarePattern(node3.type === "Property" ? node3.value : node3));
+        break;
+      case "ArrayPattern":
+        node22.elements.forEach((node3) => node3 && declarePattern(node3));
+        break;
+      case "RestElement":
+        declarePattern(node22.argument);
+        break;
+      case "AssignmentPattern":
+        declarePattern(node22.left);
+        break;
+    }
+  }
+  switch (node2.type) {
+    case "VariableDeclaration":
+      node2.declarations.forEach((child) => declarePattern(child.id));
+      break;
+    case "ClassDeclaration":
+    case "FunctionDeclaration":
+      declareLocal(node2.id);
+      break;
+    case "ExportNamedDeclaration":
+      if (((_a2 = node2.declaration) == null ? void 0 : _a2.type) === "VariableDeclaration") {
+        node2.declaration.declarations.forEach((child) => declarePattern(child.id));
+      } else if (((_b2 = node2.declaration) == null ? void 0 : _b2.type) === "FunctionDeclaration") {
+        declareLocal(node2.declaration.id);
+      }
+  }
+  return declarations;
+}
 function isScope(node2) {
   return node2.type === "FunctionExpression" || node2.type === "FunctionDeclaration" || node2.type === "ArrowFunctionExpression" || node2.type === "Program";
 }
@@ -9046,19 +9088,18 @@ function detype(input) {
   return String(output);
 }
 function removeTypeNode(output, node2) {
-  if (node2.type.startsWith("TS")) {
-    output.delete(node2.start, node2.end);
+  if (Array.isArray(node2)) {
+    node2.forEach((a2) => removeTypeNode(output, a2));
     return;
   }
-  for (let k2 in node2) {
-    let v2 = node2[k2];
-    if (Array.isArray(v2)) {
-      v2.forEach((a2) => removeTypeNode(output, a2));
-      continue;
+  if (typeof node2 === "object" && node2 !== null && typeof node2.type === "string") {
+    if (node2.type.startsWith("TS")) {
+      output.delete(node2.start, node2.end);
+      return;
     }
-    if (typeof v2 === "object" && v2 !== null && v2 instanceof Node) {
+    for (let k2 in node2) {
+      let v2 = node2[k2];
       removeTypeNode(output, v2);
-      continue;
     }
   }
 }
@@ -9069,11 +9110,15 @@ const acornOptions = {
 function findDecls(input) {
   const body = parseProgram(input);
   const list2 = body.body;
-  return list2.map((decl) => ({
-    code: input.slice(decl.start, decl.end),
-    start: decl.start,
-    end: decl.end
-  }));
+  return list2.map((decl) => {
+    const decls = findTopLevelDeclarations(decl);
+    return {
+      code: input.slice(decl.start, decl.end),
+      start: decl.start,
+      end: decl.end,
+      decls
+    };
+  });
 }
 function isCompilerArtifact(b2) {
   if (b2.type !== "Program") {
@@ -9357,7 +9402,7 @@ function rewriteRenkonCalls(output, body) {
     }
   });
 }
-const version$1$1 = "0.7.9";
+const version$1$1 = "0.7.11";
 const packageJson = {
   version: version$1$1
 };
@@ -10414,6 +10459,13 @@ class ProgramState {
   findDecls(code2) {
     return findDecls(code2);
   }
+  findDecl(name2) {
+    const decls = this.findDecls(this.scripts.join("\n"));
+    const decl = decls.find((d2) => d2.decls.includes(name2));
+    if (decl) {
+      return decl.code;
+    }
+  }
   evaluate(now, callConclude = true) {
     this.time = now - this.startTime;
     this.updated = false;
@@ -10646,7 +10698,9 @@ class ProgramState {
       });
     });
   }
-  component(func) {
+  component(argFunc) {
+    const func = typeof argFunc === "string" ? Function(`return ` + argFunc)() : argFunc;
+    const funcString = typeof argFunc === "string" ? argFunc : argFunc.toString();
     return (input, key) => {
       let programState;
       let returnValues = null;
@@ -10660,13 +10714,13 @@ class ProgramState {
         programState = subProgramState.programState;
         returnValues = subProgramState.returnArray;
       }
-      const maybeOldFunc = subProgramState == null ? void 0 : subProgramState.func;
-      if (newProgramState || func !== maybeOldFunc) {
-        const { params, returnValues: r2, output } = getFunctionBody(func.toString(), false);
+      const maybeOldFunc = subProgramState == null ? void 0 : subProgramState.funcString;
+      if (newProgramState || funcString !== maybeOldFunc) {
+        const { params, returnValues: r2, output } = getFunctionBody(funcString, false);
         returnValues = r2;
         const receivers = params.map((r22) => `const ${r22} = Events.receiver();`).join("\n");
         programState.setupProgram([receivers, output], func.name);
-        this.programStates.set(key, { programState, func, returnArray: r2 });
+        this.programStates.set(key, { programState, funcString, returnArray: r2 });
       }
       const trigger = (input2) => {
         for (let key2 in input2) {
@@ -17723,8 +17777,7 @@ function domPosAtCoords(parent, x2, y2) {
         closestRect = rect;
         closestX = dx;
         closestY = dy;
-        let side = dy ? y2 < rect.top ? -1 : 1 : dx ? x2 < rect.left ? -1 : 1 : 0;
-        closestOverlap = !side || (side > 0 ? i2 < rects.length - 1 : i2 > 0);
+        closestOverlap = !dx ? true : x2 < rect.left ? i2 > 0 : i2 < rects.length - 1;
       }
       if (dx == 0) {
         if (y2 > rect.bottom && (!aboveRect || aboveRect.bottom < rect.bottom)) {
@@ -17870,13 +17923,23 @@ function posAtCoordsImprecise(view2, contentRect, block, x2, y2) {
   return block.from + findColumn(content2, into, view2.state.tabSize);
 }
 function isSuspiciousSafariCaretResult(node2, offset2, x2) {
-  let len;
+  let len, scan = node2;
   if (node2.nodeType != 3 || offset2 != (len = node2.nodeValue.length))
     return false;
-  for (let next = node2.nextSibling; next; next = next.nextSibling)
-    if (next.nodeType != 1 || next.nodeName != "BR")
+  for (; ; ) {
+    let next = scan.nextSibling;
+    if (next) {
+      if (next.nodeName == "BR")
+        break;
       return false;
-  return textRange(node2, len - 1, len).getBoundingClientRect().left > x2;
+    } else {
+      let parent = scan.parentNode;
+      if (!parent || parent.nodeName == "DIV")
+        break;
+      scan = parent;
+    }
+  }
+  return textRange(node2, len - 1, len).getBoundingClientRect().right > x2;
 }
 function isSuspiciousChromeCaretResult(node2, offset2, x2) {
   if (offset2 != 0)
@@ -27536,7 +27599,7 @@ function syntaxIndentation(cx, ast2, pos) {
   let inner = ast2.resolveInner(pos, -1).resolve(pos, 0).enterUnfinishedNodesBefore(pos);
   if (inner != stack.node) {
     let add2 = [];
-    for (let cur2 = inner; cur2 && !(cur2.from == stack.node.from && cur2.type == stack.node.type); cur2 = cur2.parent)
+    for (let cur2 = inner; cur2 && !(cur2.from < stack.node.from || cur2.to > stack.node.to || cur2.from == stack.node.from && cur2.type == stack.node.type); cur2 = cur2.parent)
       add2.push(cur2);
     for (let i2 = add2.length - 1; i2 >= 0; i2--)
       stack = { node: add2[i2], next: stack };
@@ -27966,7 +28029,7 @@ class FoldMarker extends GutterMarker {
   }
 }
 function foldGutter(config2 = {}) {
-  let fullConfig = Object.assign(Object.assign({}, foldGutterDefaults), config2);
+  let fullConfig = { ...foldGutterDefaults, ...config2 };
   let canFold = new FoldMarker(fullConfig, true), canUnfold = new FoldMarker(fullConfig, false);
   let markers = ViewPlugin.fromClass(class {
     constructor(view2) {
@@ -27999,21 +28062,24 @@ function foldGutter(config2 = {}) {
       initialSpacer() {
         return new FoldMarker(fullConfig, false);
       },
-      domEventHandlers: Object.assign(Object.assign({}, domEventHandlers), { click: (view2, line, event) => {
-        if (domEventHandlers.click && domEventHandlers.click(view2, line, event))
-          return true;
-        let folded = findFold(view2.state, line.from, line.to);
-        if (folded) {
-          view2.dispatch({ effects: unfoldEffect.of(folded) });
-          return true;
+      domEventHandlers: {
+        ...domEventHandlers,
+        click: (view2, line, event) => {
+          if (domEventHandlers.click && domEventHandlers.click(view2, line, event))
+            return true;
+          let folded = findFold(view2.state, line.from, line.to);
+          if (folded) {
+            view2.dispatch({ effects: unfoldEffect.of(folded) });
+            return true;
+          }
+          let range = foldable(view2.state, line.from, line.to);
+          if (range) {
+            view2.dispatch({ effects: foldEffect.of(range) });
+            return true;
+          }
+          return false;
         }
-        let range = foldable(view2.state, line.from, line.to);
-        if (range) {
-          view2.dispatch({ effects: foldEffect.of(range) });
-          return true;
-        }
-        return false;
-      } })
+      }
     }),
     codeFolding()
   ];
@@ -33844,7 +33910,7 @@ function formatMapField(key, value) {
 }
 function format$2(date, fallback) {
   if (!(date instanceof Date)) date = /* @__PURE__ */ new Date(+date);
-  if (isNaN(date)) return false ? fallback(date) : fallback;
+  if (isNaN(date)) return typeof fallback === "function" ? fallback(date) : fallback;
   const hours = date.getUTCHours();
   const minutes = date.getUTCMinutes();
   const seconds = date.getUTCSeconds();

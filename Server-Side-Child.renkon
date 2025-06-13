@@ -45,12 +45,7 @@
 "type":"resize",
 "width":682.8100299256059,
 "x":321.30330790679744,
-"y":267.05204973782674}],["16",{"height":1353.583308642452,
-"id":"16",
-"type":"move",
-"width":797.0005145296376,
-"x":301.612816518757,
-"y":1779.7062944016675}],["19",{"height":137.47310887062002,
+"y":267.05204973782674}],["19",{"height":137.47310887062002,
 "id":"19",
 "type":"move",
 "width":363.15158516885833,
@@ -75,9 +70,7 @@
 "state":false,
 "title":"Stringify"}],["15",{"id":"15",
 "state":false,
-"title":"New Component"}],["16",{"id":"16",
-"state":false,
-"title":"OutputConsole"}],["19",{"id":"19",
+"title":"New Component"}],["19",{"id":"19",
 "state":false,
 "title":"iframe receivers"}]]}},
 "version":2,
@@ -91,14 +84,13 @@
 "id":"9"}],["11",{"enabled":true,
 "id":"11"}],["12",{"enabled":true,
 "id":"12"}],["15",{"enabled":true,
-"id":"15"}],["16",{"enabled":false,
-"id":"16"}],["19",{"enabled":true,
+"id":"15"}],["19",{"enabled":true,
 "id":"19"}]]}},
 "windowTypes":{"map":{"__map":true,
-"values":[["3","code"],["4","code"],["5","code"],["6","code"],["7","code"],["9","code"],["11","code"],["12","code"],["15","code"],["16","code"],["19","code"]]}},
-"windows":["3","4","5","6","7","9","11","12","15","16","19"],
+"values":[["3","code"],["4","code"],["5","code"],["6","code"],["7","code"],["9","code"],["11","code"],["12","code"],["15","code"],["19","code"]]}},
+"windows":["3","4","5","6","7","9","11","12","15","19"],
 "zIndex":{"map":{"__map":true,
-"values":[["3",105],["4",104],["5",103],["6",110],["7",112],["9",100],["11",114],["12",109],["15",111],["16",113],["19",115]]}}}
+"values":[["3",105],["4",104],["5",103],["6",110],["7",112],["9",100],["11",114],["12",109],["15",111],["19",115]]}}}
 {__codeMap: true, value: [[`3`, `    const addCode = Events.listener(renkon.querySelector("#addCodeButton"), "click", () => "code");
     const save = Events.listener(renkon.querySelector("#saveButton"), "click", (evt) => evt);
     const load = Events.listener(renkon.querySelector("#loadButton"), "click", (evt) => evt);
@@ -1560,78 +1552,6 @@ function parseCodeMap(string) {
         return editor;
     };
 `],
-[`16`, `const abortController = Behaviors.collect(new AbortController(), abortHandler, (a, b) => {
-  a.abort(); 
-  return new AbortController();
-});
-
-async function* consoleOutput(name, controller) {
-  console.log("consoleOutput");
-  if (!controller) {
-    controller = new AbortController();
-  }
-
-  const response = await fetch(\`\${serverURL}/stdout/\${name}\`, {
-    headers: {
-      'Connection': 'keep-alive',
-      'Content-Type': 'application/octet-stream',
-      'Accept': 'text/event-stream',
-    },
-    signal: controller.signal
-  });
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-
-  try {
-    let cont = true;
-    while (cont) {
-      const result = await reader.read();
-      if (result.done) {
-        break;
-      }
-      const text = decoder.decode(result.value);
-      yield text;
-    }
-  } catch (e) {
-    if (e.name !== 'AbortError') {
-      console.error("llama error: ", e);
-    }
-    throw e;
-  } finally {
-    controller.abort();
-  }
-};
-
-const output = consoleOutput(setupOutput, abortController);
-const logP = Events.next(output);
-const log = Events.change(logP);
-const logTimer = Events.timer(1000);
-
-const logs = Events.select(
-  {acc: [], log: null},
-  log, (prev, log) => {
-    prev.acc.push(log.value);
-    return {acc: prev.acc, log: null};
-  },
-  logTimer, (prev, timer) => {
-    return {acc: [], log: prev.acc.join("\\n")}
-  }
-);
-
-((logs) => {
-  if (!logs.log) {return;}
-  window.Toastify({
-    text: logs.log,
-    duration: 750,
-    stopOnFocus: false,
-    gravity: "bottom", // \`top\` or \`bottom\`
-    position: "right", // \`left\`, \`center\` or \`right\`
-    style: {
-      background: "linear-gradient(to right, #00b09b, #96c93d)",
-    },
-  }).showToast();
-})(logs);`],
 [`19`, `
-const serverURL = Behaviors.receiver();
 const nameRequest = Events.receiver();
 `]]}
