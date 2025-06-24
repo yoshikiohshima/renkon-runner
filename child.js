@@ -15,6 +15,8 @@ const rl = readline.createInterface({
     terminal: false
 });
 
+let started = false;
+
 rl.on("line", (line) => {
     const input = JSON.parse(line);
     console.log("input", input);
@@ -24,15 +26,15 @@ rl.on("line", (line) => {
     // so that you can set it up and start running with one "data"
     if (input.status) {
         if (input.status === "start") {
-            console.log("starting");
-            if (programState.evaluatorRunning === 0) {
-                programState.nodeEvaluator();
+            if (!started) {
+                started = true;
+                debugger;
+                programState.evaluator(Date.now(), {noAnimationFrame: true});
+            } else {
+                programState.start();
             }
         } else if (input.status === "stop") {
-            if (programState.evaluatorRunning !== 0) {
-                clearInterval(programState.evaluatorRunning);
-                programState.evaluatorRunning = 0;
-            }
+            programState.stop();
         }
     }
 });

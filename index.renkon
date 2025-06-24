@@ -4,43 +4,38 @@
 "id":"6",
 "type":"move",
 "width":1244.1061060080397,
-"x":-94.27706523894264,
-"y":372.53089552819284}],["11",{"height":891.0975729567003,
+"x":-214.30015211064665,
+"y":-1644.4965299704586}],["11",{"height":891.0975729567003,
 "id":"11",
-"type":"resize",
+"type":"move",
 "width":543.6354392457251,
-"x":-80.18909181201093,
-"y":-914.9941746340685}],["12",{"height":1732.8831767708493,
+"x":-3486.103723303113,
+"y":283.00319751836884}],["12",{"height":1732.8831767708493,
 "id":"12",
 "type":"move",
 "width":854.1451621960841,
-"x":1273.727752950642,
-"y":-264.3996035759288}],["33",{"height":3489.663953620072,
+"x":1403.8424850968715,
+"y":-1651.0045198947937}],["33",{"height":3489.663953620072,
 "id":"33",
 "type":"move",
 "width":862.351073572269,
 "x":-2638.3309354125213,
 "y":-1629.98688724484}],["38",{"height":1279.42598994181,
 "id":"38",
-"type":"resize",
-"width":812.0305947353447,
-"x":-1312.2124447864264,
-"y":-1273.1896902367378}],["40",{"height":1701.957013496752,
-"id":"40",
-"type":"resize",
-"width":859.2698199357318,
-"x":-1309.1924291391058,
-"y":182.14143220565586}],["95",{"height":1050.6607852258355,
-"id":"95",
-"type":"resize",
-"width":681.630180686822,
-"x":-3489.8545864597095,
-"y":-1624.3150174926589}],["96",{"height":793.3825569579437,
-"id":"96",
 "type":"move",
-"width":768.8671761854293,
-"x":-4362.500282751146,
-"y":-1618.9168250381772}]]}},
+"width":812.0305947353447,
+"x":-1338.1807549196,
+"y":-1632.51975390499}],["40",{"height":1701.957013496752,
+"id":"40",
+"type":"move",
+"width":859.2698199357318,
+"x":-1356.870632211585,
+"y":-6.209163754076869}],["95",{"height":1800.7144929332007,
+"id":"95",
+"type":"move",
+"width":696.8619358577097,
+"x":-3482.8448059060765,
+"y":-1637.5374374900355}]]}},
 "titles":{"map":{"__map":true,
 "values":[["6",{"id":"6",
 "state":false,
@@ -56,9 +51,7 @@
 "state":false,
 "title":"Program List"}],["95",{"id":"95",
 "state":false,
-"title":"untitled"}],["96",{"id":"96",
-"state":false,
-"title":"untitled"}]]}},
+"title":"Logging Component"}]]}},
 "version":2,
 "windowEnabled":{"map":{"__map":true,
 "values":[["6",{"enabled":true,
@@ -68,13 +61,12 @@
 "id":"33"}],["38",{"enabled":true,
 "id":"38"}],["40",{"enabled":true,
 "id":"40"}],["95",{"enabled":true,
-"id":"95"}],["96",{"enabled":true,
-"id":"96"}]]}},
+"id":"95"}]]}},
 "windowTypes":{"map":{"__map":true,
-"values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"],["95","code"],["96","code"]]}},
-"windows":["6","11","12","33","38","40","95","96"],
+"values":[["6","code"],["11","code"],["12","code"],["33","code"],["38","code"],["40","code"],["95","code"]]}},
+"windows":["6","11","12","33","38","40","95"],
 "zIndex":{"map":{"__map":true,
-"values":[["6",124],["11",121],["12",118],["33",122],["38",111],["40",120],["95",123],["96",109]]}}}
+"values":[["6",120],["11",123],["12",124],["33",122],["38",121],["40",111],["95",118]]}}}
 {__codeMap: true, value: [[`6`, `    const css = \`
 @font-face {
     font-family: "OpenSans-Regular";
@@ -371,10 +363,7 @@ function parseCodeMap(string) {
                 code = array.value;
                 code = code.filter((pair) => (!map.get(pair[0]) || map.get(pair[0]).enabled));
                 window.programState = new ProgramState(Date.now());
-                programState.setupProgram(code.map((pair) => ({blockId: pair[0], code: pair[1]})), docName);
-                if (programState.evaluatorRunning === 0) {
-                    programState.evaluator();
-                }
+                programState.updateProgram(code.map((pair) => ({blockId: pair[0], code: pair[1]})), docName);
                 if (!window._loaded) {
                     window._loaded = true;
                     window.parent.postMessage({ready: true, name: "\${program.name}"});
@@ -394,9 +383,7 @@ function parseCodeMap(string) {
                     if (evt.data.loadData.program) {
                       window.programState.registerEvent("loadRequest", evt.data.loadData.program);
                     }
-                    if (window.programState.evaluatorRunning === 0) {
-                      programState.evaluator();
-                    }
+                    programState.evaluate(Date.now);
                     if (evt.data.name) {
                       window.programState.registerEvent("nameRequest", evt.data.name);
                     }
@@ -470,7 +457,7 @@ const readyHandler = Events.observe((notify) => {
 
 const statusChangeHandler = Events.observe((notify) => {
   const listener = (evt) => {
-    console.log(evt.data);
+    console.log("status change", evt.data);
     if (evt.data.statusChange) {
       const data = decodeURIComponent(evt.data.savedData);
       const loadedData = loadRenkon(data);
@@ -560,7 +547,13 @@ const programs = Behaviors.select(
     prev.map.delete(trash);
     return {map: prev.map}
   },
-  Events.or(renkonProgramLoaded, statusChangeHandler), (prev, program) => {
+  renkonProgramLoaded, (prev, program) => {
+    if (program === null) {return prev;}
+    if (prev.map.get(program.name)?.data === program.data) {return prev;}
+    prev.map.set(program.name, program);
+    return {map: prev.map}
+  },
+  statusChangeHandler, (prev, program) => {
     if (program === null) {return prev;}
     if (prev.map.get(program.name)?.data === program.data) {return prev;}
     prev.map.set(program.name, program);
@@ -596,7 +589,7 @@ Events.send(renkonProgramLoaded, Events.change(renkonProgram));`],
 const selectedProgram = Behaviors.select(
   null,
   trash, (_prev, trash) => null,
-  selected, (_prev, selected) => selected,
+  selected, (_prev, selected) => {debugger; return selected},
 );
 
 const thumbnails = ((programs, programStates) => {
@@ -740,24 +733,7 @@ const _stop = ((trash) => {
   return {log};
 };
 
-/*
-
-
-((logs) => {
-  if (!logs.log) {return;}
-  window.Toastify({
-    text: logs.log,
-    duration: 750,
-    stopOnFocus: false,
-    gravity: "bottom", // \`top\` or \`bottom\`
-    position: "right", // \`left\`, \`center\` or \`right\`
-    style: {
-      background: "linear-gradient(to right, #00b09b, #96c93d)",
-    },
-  }).showToast();
-})(logs);
-*/`],
-[`96`, `const outputs = Behaviors.select(
+const outputs = Behaviors.select(
   {map: new Map()},
   addProcess, (prev, name) => {
     if (prev.map.get(name)) {
@@ -765,7 +741,7 @@ const _stop = ((trash) => {
     }
     Renkon.merge([\`
       function merged({}) {
-        const \${name}_logger = component({name: "\${name}", serverURL, ticker}, "\${name}");
+        const \${name}_logger = component({name: "\${name}", serverURL}, "\${name}");
         return []
       }\`]);
     prev.map.set(name, name);
